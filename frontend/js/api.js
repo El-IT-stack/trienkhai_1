@@ -455,6 +455,8 @@ async function handleRegisterForm(e) {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Tạo Tài Khoản';
   }
+}
+
 // Render Top Role Demo Switcher Bar on every page
 function renderRoleSwitcherBar() {
   if (document.getElementById('roleSwitcherBar')) return;

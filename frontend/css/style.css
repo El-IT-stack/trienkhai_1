@@ -349,19 +349,55 @@ body {
   border-top: 1px solid var(--border-color);
 }
 
-/* Form Controls */
+/* Form Controls & High Visibility */
 .form-control, .form-select {
-  background-color: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background-color: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #f8fafc !important;
   border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+.input-group-text {
+  background-color: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #cbd5e1 !important;
 }
 
 .form-control:focus, .form-select:focus {
-  background-color: #1e293b;
-  border-color: var(--accent-primary);
-  color: #fff;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25);
+  background-color: #1e293b !important;
+  border-color: #f43f5e !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.3) !important;
+}
+
+.form-select option {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* High Contrast Readability for Dark Theme */
+.text-muted, p.text-muted, span.text-muted, small.text-muted {
+  color: #cbd5e1 !important; /* Bright silver Slate 300 - clear & legible */
+}
+
+.text-dim {
+  color: #94a3b8 !important;
+}
+
+.glass-card p, .glass-card .small {
+  color: #cbd5e1;
+}
+
+footer, footer .text-muted {
+  color: #94a3b8 !important;
 }
 
 /* Electronic Ticket */
