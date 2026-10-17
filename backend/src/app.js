@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const fs = require('fs');
 
 const { httpLoggerMiddleware } = require('./middlewares/logger.middleware');
 const { metricsMiddleware } = require('./middlewares/metrics.middleware');
@@ -58,7 +59,10 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Serve Frontend Static Files
-const frontendPath = path.join(__dirname, '../../frontend');
+let frontendPath = path.join(__dirname, '../frontend');
+if (!fs.existsSync(frontendPath)) {
+  frontendPath = path.join(__dirname, '../../frontend');
+}
 app.use(express.static(frontendPath));
 
 // Fallback for SPA/HTML navigation if file not found

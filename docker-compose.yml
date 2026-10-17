@@ -22,6 +22,8 @@ volumes:
     driver: local
   grafana_data:
     driver: local
+  loki_data:
+    driver: local
 
 services:
   # ----------------------------------------------------------------------------
@@ -224,6 +226,8 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-Grafana_AdminSecurePass_2026!}
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -234,3 +238,36 @@ services:
       - cineevent-frontend-net
     depends_on:
       - prometheus
+
+  # ----------------------------------------------------------------------------
+  # 10. Loki Centralized Log Store
+  # ----------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: cineevent-loki
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - cineevent-frontend-net
+
+  # ----------------------------------------------------------------------------
+  # 11. Promtail Log Collection Agent
+  # ----------------------------------------------------------------------------
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: cineevent-promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - nginx_logs:/var/log/nginx:ro
+      - app_logs:/var/log/cineevent:ro
+    command:
+      - -config.file=/etc/promtail/config.yml
+    networks:
+      - cineevent-frontend-net
+    depends_on:
+      - loki

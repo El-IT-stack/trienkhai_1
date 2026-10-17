@@ -1,0 +1,49 @@
+# ==============================================================================
+# PROMTAIL LOG AGENT CONFIGURATION
+# ==============================================================================
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # 1. CineEvent Express.js Application Logs
+  - job_name: cineevent-app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: cineevent-app
+          service: cineevent-app
+          environment: production
+          __path__: /var/log/cineevent/*.log
+
+  # 2. Nginx Access Logs
+  - job_name: nginx-access
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          service: nginx
+          log_type: access
+          environment: production
+          __path__: /var/log/nginx/access.log
+
+  # 3. Nginx Error Logs
+  - job_name: nginx-error
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          service: nginx
+          log_type: error
+          environment: production
+          __path__: /var/log/nginx/error.log
