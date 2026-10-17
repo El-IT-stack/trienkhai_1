@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Soát Vé Nhân Viên (Staff) — CineEvent</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
+        <i class="bi bi-film text-danger fs-3"></i>
+        <span>Cine<span class="brand-badge">Event</span></span>
+      </a>
+
+      <button class="navbar-toggler border-0 text-white" type="button" data-bs-target="#mainNavbar" data-bs-toggle="collapse">
+        <i class="bi bi-list fs-2"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+          <li class="nav-item"><a class="nav-link" href="/index.html"><i class="bi bi-house-door me-1"></i> Trang Chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/movies.html"><i class="bi bi-camera-reels me-1"></i> Phim Chiếu Rạp</a></li>
+          <li class="nav-item"><a class="nav-link" href="/events.html"><i class="bi bi-calendar-event me-1"></i> Sự Kiện & Lễ Hội</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/staff-checkin.html"><i class="bi bi-qr-code-scan me-1 text-info"></i> Soát Vé (Staff)</a></li>
+        </ul>
+        <div id="navbarAuthSection" class="d-flex align-items-center"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container my-5">
+    <!-- Role check alert -->
+    <div id="staffPermissionAlert" class="d-none"></div>
+
+    <div class="row g-4" id="staffPortalContent">
+      <!-- Left: Ticket Search & Check-in form -->
+      <div class="col-lg-6">
+        <div class="glass-card p-4 mb-4">
+          <h4 class="fw-bold text-white mb-2">
+            <i class="bi bi-qr-code-scan text-info me-2"></i>Kiểm Tra & Soát Vé
+          </h4>
+          <p class="text-muted small mb-4">Nhập mã vé hoặc nội dung mã QR do khách hàng cung cấp tại quầy/cửa soát vé.</p>
+
+          <!-- Quick Test Sample Buttons -->
+          <div class="p-3 rounded bg-dark border border-secondary mb-4">
+            <span class="small text-muted fw-bold d-block mb-2"><i class="bi bi-lightning text-warning me-1"></i>Mã vé mẫu sẵn trong cơ sở dữ liệu:</span>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-success btn-xs btn-sm py-1 font-monospace" onclick="setTestCode('TCK-CINE-882910')">
+                TCK-CINE-882910 (Vé Hợp Lệ)
+              </button>
+              <button class="btn btn-outline-warning btn-xs btn-sm py-1 font-monospace" onclick="setTestCode('TCK-CINE-882911')">
+                TCK-CINE-882911 (Đã Soát Trước Đó)
+              </button>
+              <button class="btn btn-outline-info btn-xs btn-sm py-1 font-monospace" onclick="setTestCode('TCK-EVT-991201')">
+                TCK-EVT-991201 (Vé Monsoon)
+              </button>
+            </div>
+          </div>
+
+          <form id="checkTicketForm" onsubmit="handleCheckTicket(event)">
+            <div class="mb-3">
+              <label class="form-label text-muted small">Mã vé (Ticket Code hoặc QR Payload)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-info"><i class="bi bi-upc-scan"></i></span>
+                <input type="text" id="inputTicketCode" class="form-control font-monospace text-warning fw-bold" placeholder="Ví dụ: TCK-CINE-882910" required>
+                <button type="submit" class="btn btn-primary-cine px-4" id="btnSearchTicket">
+                  <i class="bi bi-search me-1"></i> Tra Cứu
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Ticket Verification Result Display -->
+          <div id="ticketResultBox" class="mt-4 d-none"></div>
+        </div>
+      </div>
+
+      <!-- Right: Recent Check-ins Feed -->
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
+            <h5 class="fw-bold text-white mb-0">
+              <i class="bi bi-clock-history text-warning me-2"></i>Lịch Sử Soát Vé Gần Nhất
+            </h5>
+            <button class="btn btn-outline-secondary btn-sm py-0 text-white" onclick="loadRecentCheckins()">
+              <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+            </button>
+          </div>
+
+          <div id="recentCheckinsList">
+            <div class="text-center py-4 text-muted">Đang tải lịch sử...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-auto py-4 border-top border-secondary" style="background: #070a10;">
+    <div class="container text-center text-muted small">
+      CineEvent — Hệ Thống Đặt Vé Xem Phim & Sự Kiện | Sinh viên: [HỌ VÀ TÊN] - MSSV: [MSSV] - Lớp: [LỚP]
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let activeTicket = null;
+
+    function setTestCode(code) {
+      document.getElementById('inputTicketCode').value = code;
+      handleCheckTicket();
+    }
+
+    async function handleCheckTicket(e) {
+      if (e) e.preventDefault();
+      const codeInput = document.getElementById('inputTicketCode').value.trim();
+      const box = document.getElementById('ticketResultBox');
+      const btn = document.getElementById('btnSearchTicket');
+
+      if (!codeInput) return;
+
+      // Extract ticket code if QR payload passed (e.g., CINEEVENT:BK-...:TCK-...:...)
+      let ticketCode = codeInput;
+      if (codeInput.startsWith('CINEEVENT:')) {
+        const parts = codeInput.split(':');
+        if (parts.length >= 3) {
+          ticketCode = parts[2];
+        }
+      }
+
+      btn.disabled = true;
+      box.className = 'mt-4';
+      box.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-info"></div> Tra cứu...</div>';
+      box.classList.remove('d-none');
+
+      try {
+        const res = await apiCall(`/tickets/${ticketCode}`);
+        activeTicket = res.data;
+
+        const isMovie = activeTicket.booking_type === 'movie';
+        const title = isMovie ? activeTicket.movie_title : activeTicket.event_title;
+        const seatOrType = activeTicket.seat_row ? `Ghế ${activeTicket.seat_row}${activeTicket.seat_number} (${activeTicket.seat_type})` : activeTicket.ticket_type_name;
+
+        if (activeTicket.status === 'valid') {
+          box.innerHTML = `
+            <div class="p-4 rounded border border-success" style="background: rgba(16, 185, 129, 0.1);">
+              <div class="d-flex align-items-center gap-2 text-success mb-3">
+                <i class="bi bi-patch-check-fill fs-3"></i>
+                <div>
+                  <strong class="fs-5 d-block">VÉ HỢP LỆ — CHƯA SỬ DỤNG</strong>
+                  <span class="small text-light">Mã vé: <strong class="font-monospace">${activeTicket.ticket_code}</strong></span>
+                </div>
+              </div>
+
+              <div class="small mb-3">
+                <div class="text-white"><strong class="text-muted">Chương trình:</strong> ${title}</div>
+                <div class="text-white"><strong class="text-muted">Vị trí:</strong> <span class="badge bg-warning text-dark font-monospace">${seatOrType}</span></div>
+                <div class="text-white"><strong class="text-muted">Khách hàng:</strong> ${activeTicket.customer_name} (${activeTicket.customer_phone || activeTicket.customer_email})</div>
+                <div class="text-white"><strong class="text-muted">Suất chiếu/Bắt đầu:</strong> ${formatDateTime(activeTicket.showtime_start)}</div>
+              </div>
+
+              <button type="button" class="btn btn-success w-100 py-2 fw-bold" onclick="confirmCheckin('${activeTicket.ticket_code}')">
+                <i class="bi bi-check2-circle me-1"></i> XÁC NHẬN SOÁT VÉ VÀ CHO KHÁCH VÀO
+              </button>
+            </div>
+          `;
+        } else if (activeTicket.status === 'used') {
+          box.innerHTML = `
+            <div class="p-4 rounded border border-danger" style="background: rgba(225, 29, 72, 0.1);">
+              <div class="d-flex align-items-center gap-2 text-danger mb-3">
+                <i class="bi bi-slash-circle-fill fs-3"></i>
+                <div>
+                  <strong class="fs-5 d-block">CẢNH BÁO: VÉ ĐÃ ĐƯỢC SỬ DỤNG!</strong>
+                  <span class="small text-light">Mã vé: <strong class="font-monospace">${activeTicket.ticket_code}</strong></span>
+                </div>
+              </div>
+
+              <div class="small text-light mb-3">
+                <div>Vé này đã được nhân viên <strong>${activeTicket.staff_name || 'Hệ thống'}</strong> soát vào lúc:</div>
+                <div class="text-warning fw-bold fs-6 mt-1">${formatDateTime(activeTicket.checkin_time)}</div>
+                <div class="mt-2 text-muted">Vị trí ghế/vé: ${seatOrType} &bull; Khách: ${activeTicket.customer_name}</div>
+              </div>
+
+              <div class="alert alert-dark border border-danger small mb-0 text-danger">
+                <i class="bi bi-shield-x me-1"></i> Nghi vấn gian lận vé trùng lặp. Vui lòng từ chối cho vào!
+              </div>
+            </div>
+          `;
+        } else {
+          box.innerHTML = `
+            <div class="p-4 rounded border border-warning" style="background: rgba(234, 88, 12, 0.1);">
+              <strong class="text-warning d-block fs-5 mb-1">Vé Không Hợp Lệ (Trạng thái: ${activeTicket.status})</strong>
+              <span class="small text-muted">Vé đã bị hủy hoặc giao dịch không hoàn tất.</span>
+            </div>
+          `;
+        }
+      } catch (err) {
+        box.innerHTML = `
+          <div class="p-3 rounded border border-danger bg-dark text-danger small">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> ${err.message}
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function confirmCheckin(code) {
+      try {
+        const res = await apiCall('/tickets/checkin', {
+          method: 'POST',
+          body: {
+            ticket_code: code,
+            notes: 'Soát vé tại cổng vào rạp'
+          }
+        });
+
+        showToast(res.message, 'success');
+        handleCheckTicket();
+        loadRecentCheckins();
+      } catch (err) {
+        showToast(err.message, 'danger');
+      }
+    }
+
+    async function loadRecentCheckins() {
+      const container = document.getElementById('recentCheckinsList');
+      try {
+        const res = await apiCall('/tickets/staff/recent-checkins');
+        const list = res.data || [];
+
+        if (list.length === 0) {
+          container.innerHTML = '<div class="text-muted text-center py-4">Chưa có lượt soát vé nào gần đây.</div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="table-responsive">
+            <table class="table table-dark table-hover small mb-0">
+              <thead>
+                <tr class="text-muted">
+                  <th>Thời gian</th>
+                  <th>Mã vé</th>
+                  <th>Chương trình / Vị trí</th>
+                  <th>Nhân viên</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${list.map(c => `
+                  <tr>
+                    <td class="text-muted">${formatDateTime(c.checkin_time)}</td>
+                    <td class="font-monospace text-warning">${c.ticket_code}</td>
+                    <td>
+                      <div class="text-white text-truncate" style="max-width:180px;">${c.title}</div>
+                      <span class="badge bg-secondary">${c.seat_or_type}</span>
+                    </td>
+                    <td class="text-info">${c.staff_name || 'Staff'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } catch (e) {
+        container.innerHTML = `<div class="text-danger small">${e.message}</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getCurrentUser();
+      if (!user || !['admin', 'manager', 'staff'].includes(user.role_name)) {
+        const alertBox = document.getElementById('staffPermissionAlert');
+        alertBox.className = 'alert alert-warning glass-card text-center mb-4';
+        alertBox.innerHTML = `
+          <h5><i class="bi bi-shield-lock me-2"></i>Trang Dành Riêng Cho Nhân Viên (Staff / Manager / Admin)</h5>
+          <p class="mb-3">Vui lòng đăng nhập bằng tài khoản Nhân viên hoặc Quản lý để sử dụng tính năng soát vé.</p>
+          <button class="btn btn-outline-warning btn-sm" onclick="autofillLogin('staff'); document.getElementById('loginModal') && new bootstrap.Modal(document.getElementById('loginModal')).show();">
+            Đăng nhập nhanh tài khoản Staff Demo
+          </button>
+        `;
+        alertBox.classList.remove('d-none');
+      }
+
+      loadRecentCheckins();
+    });
+  </script>
+</body>
+</html>

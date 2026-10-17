@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vé Điện Tử — CineEvent</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .navbar, footer, .no-print { display: none !important; }
+      .ticket-wrapper { border: 2px solid #000 !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
+      .text-white, .text-warning, .text-muted { color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
+        <i class="bi bi-film text-danger fs-3"></i>
+        <span>Cine<span class="brand-badge">Event</span></span>
+      </a>
+
+      <button class="navbar-toggler border-0 text-white" type="button" data-bs-target="#mainNavbar" data-bs-toggle="collapse">
+        <i class="bi bi-list fs-2"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+          <li class="nav-item"><a class="nav-link" href="/index.html"><i class="bi bi-house-door me-1"></i> Trang Chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/movies.html"><i class="bi bi-camera-reels me-1"></i> Phim Chiếu Rạp</a></li>
+          <li class="nav-item"><a class="nav-link" href="/events.html"><i class="bi bi-calendar-event me-1"></i> Sự Kiện & Lễ Hội</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/my-tickets.html"><i class="bi bi-ticket-perforated me-1"></i> Vé Của Tôi</a></li>
+        </ul>
+        <div id="navbarAuthSection" class="d-flex align-items-center"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container my-5">
+    <div id="ticketResultContainer" style="max-width: 650px; margin: 0 auto;">
+      <div class="text-center py-5">
+        <div class="spinner-border text-danger" role="status"></div>
+        <div class="text-muted mt-2">Đang nạp thông tin vé điện tử...</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-auto py-4 border-top border-secondary" style="background: #070a10;">
+    <div class="container text-center text-muted small">
+      CineEvent — Hệ Thống Đặt Vé Xem Phim & Sự Kiện | Sinh viên: [HỌ VÀ TÊN] - MSSV: [MSSV] - Lớp: [LỚP]
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookingCode = urlParams.get('code');
+
+      if (!bookingCode) {
+        document.getElementById('ticketResultContainer').innerHTML = `
+          <div class="alert alert-warning glass-card text-center">
+            <h5>Không tìm thấy thông tin vé!</h5>
+            <a href="/index.html" class="btn btn-primary-cine btn-sm mt-3">Về Trang Chủ</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await apiCall(`/bookings/${bookingCode}`);
+        const booking = res.data;
+        const isMovie = booking.booking_type === 'movie';
+        const title = isMovie ? booking.movie_title : booking.event_title;
+        const tickets = booking.tickets || [];
+
+        let ticketsListHtml = '';
+        if (tickets.length > 0) {
+          ticketsListHtml = tickets.map((tck, idx) => {
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(tck.qr_data)}&bgcolor=1e293b&color=ffffff`;
+            const statusBadge = tck.status === 'valid'
+              ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Hợp Lệ (Chưa Soát)</span>'
+              : tck.status === 'used'
+              ? '<span class="badge bg-secondary"><i class="bi bi-check-all me-1"></i>Đã Sử Dụng</span>'
+              : '<span class="badge bg-danger">Đã Hủy</span>';
+
+            return `
+              <div class="ticket-wrapper p-4 mb-4">
+                <div class="ticket-notch-left"></div>
+                <div class="ticket-notch-right"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-film text-danger fs-4"></i>
+                    <span class="fw-bold text-white fs-5">Cine<span class="brand-badge">Event</span> E-Ticket</span>
+                  </div>
+                  <div>${statusBadge}</div>
+                </div>
+
+                <div class="row align-items-center g-3">
+                  <div class="col-sm-8">
+                    <h5 class="fw-bold text-white mb-2">${title}</h5>
+                    <div class="small text-muted mb-1"><i class="bi bi-geo-alt text-danger me-1"></i>${booking.cinema_name || ''} &bull; ${booking.room_name || ''}</div>
+                    <div class="small text-muted mb-1"><i class="bi bi-calendar-event text-warning me-1"></i>${formatDateTime(booking.showtime_start || booking.created_at)}</div>
+                    <div class="small text-muted mb-3"><i class="bi bi-person text-info me-1"></i>Khách hàng: <strong>${booking.user_name}</strong></div>
+
+                    <div class="p-2 rounded bg-dark border border-secondary font-monospace small">
+                      <div class="text-muted" style="font-size:0.75rem;">MÃ VÉ (TICKET CODE):</div>
+                      <div class="text-warning fw-bold fs-6">${tck.ticket_code}</div>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-4 text-center">
+                    <div class="p-2 bg-dark rounded border border-secondary d-inline-block">
+                      <img src="${qrImageUrl}" alt="QR Ticket Code" style="width: 120px; height: 120px; border-radius: 6px;">
+                    </div>
+                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">Quét mã khi vào cửa</div>
+                  </div>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="d-flex justify-content-between align-items-center small text-muted">
+                  <span>Mã đơn: <strong class="text-white">${booking.booking_code}</strong></span>
+                  <span>Mã GD: <strong class="text-white">${booking.transaction_code || 'DEMO-TXN'}</strong></span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          ticketsListHtml = '<div class="alert alert-info">Đơn hàng chưa có vé điện tử được phát hành.</div>';
+        }
+
+        document.getElementById('ticketResultContainer').innerHTML = `
+          <!-- Success banner -->
+          <div class="text-center mb-4 no-print">
+            <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-25 text-success mb-3">
+              <i class="bi bi-check-circle-fill fs-1"></i>
+            </div>
+            <h2 class="fw-bold text-white mb-1">Giao Dịch Thành Công!</h2>
+            <p class="text-muted small">Cảm ơn bạn đã lựa chọn CineEvent. Vé điện tử hợp lệ đã được cấp bên dưới.</p>
+          </div>
+
+          <!-- Tickets -->
+          ${ticketsListHtml}
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-center gap-3 mt-4 no-print">
+            <button class="btn btn-outline-cine" onclick="window.print()">
+              <i class="bi bi-printer me-2"></i>In Vé Điện Tử
+            </button>
+            <a href="/my-tickets.html" class="btn btn-primary-cine">
+              <i class="bi bi-ticket-perforated me-2"></i>Xem Tất Cả Vé Của Tôi
+            </a>
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('ticketResultContainer').innerHTML = `
+          <div class="alert alert-danger glass-card">
+            <h5>Không thể nạp vé:</h5>
+            <p>${err.message}</p>
+            <a href="/index.html" class="btn btn-outline-cine btn-sm">Về Trang Chủ</a>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

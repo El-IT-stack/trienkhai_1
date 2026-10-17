@@ -1,0 +1,395 @@
+/**
+ * CineEvent API Client & Utility Library
+ */
+
+const API_BASE = '/api';
+
+// Token Management
+function getToken() {
+  return localStorage.getItem('cineevent_token');
+}
+
+function setToken(token) {
+  localStorage.setItem('cineevent_token', token);
+}
+
+function removeToken() {
+  localStorage.removeItem('cineevent_token');
+  localStorage.removeItem('cineevent_user');
+}
+
+function getCurrentUser() {
+  const userStr = localStorage.getItem('cineevent_user');
+  try {
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setCurrentUser(user) {
+  localStorage.setItem('cineevent_user', JSON.stringify(user));
+}
+
+// Universal API fetch helper
+async function apiCall(endpoint, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const config = {
+    method: options.method || 'GET',
+    headers,
+    ...options
+  };
+
+  if (options.body && typeof options.body === 'object') {
+    config.body = JSON.stringify(options.body);
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, config);
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        // If unauthorized and has expired token, log out
+        if (token) {
+          removeToken();
+          updateNavbarAuth();
+          showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'warning');
+        }
+      }
+      throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+    }
+
+    return data;
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Toast Notifications
+function showToast(message, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container-custom';
+    document.body.appendChild(container);
+  }
+
+  const toastId = 'toast-' + Date.now();
+  const bgClass = type === 'success' ? 'bg-success' : type === 'danger' ? 'bg-danger' : type === 'warning' ? 'bg-warning text-dark' : 'bg-primary';
+  const icon = type === 'success' ? 'bi-check-circle-fill' : type === 'danger' ? 'bi-exclamation-triangle-fill' : type === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-info-circle-fill';
+
+  const toastHtml = `
+    <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0 show mb-2 shadow-lg" role="alert" style="min-width: 320px;">
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2">
+          <i class="bi ${icon} fs-5"></i>
+          <span>${message}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" onclick="document.getElementById('${toastId}').remove()"></button>
+      </div>
+    </div>
+  `;
+
+  container.insertAdjacentHTML('beforeend', toastHtml);
+
+  setTimeout(() => {
+    const el = document.getElementById(toastId);
+    if (el) {
+      el.remove();
+    }
+  }, 4500);
+}
+
+// Format currency
+function formatVND(amount) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+}
+
+// Format date and time
+function formatDateTime(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
+function formatDateOnly(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
+// Update Navbar based on logged in user role
+function updateNavbarAuth() {
+  const user = getCurrentUser();
+  const authNav = document.getElementById('navbarAuthSection');
+  if (!authNav) return;
+
+  if (user) {
+    const roleBadge = user.role_name === 'admin' 
+      ? '<span class="badge bg-danger ms-1">Admin</span>'
+      : user.role_name === 'manager'
+      ? '<span class="badge bg-warning text-dark ms-1">Quản lý</span>'
+      : user.role_name === 'staff'
+      ? '<span class="badge bg-info text-dark ms-1">Nhân viên</span>'
+      : '<span class="badge bg-secondary ms-1">Khách</span>';
+
+    let extraRoleLinks = '';
+    if (['admin', 'manager'].includes(user.role_name)) {
+      extraRoleLinks += `<li><a class="dropdown-item py-2" href="/admin.html"><i class="bi bi-speedometer2 me-2 text-warning"></i>Bảng Quản Trị</a></li>`;
+    }
+    if (['admin', 'manager', 'staff'].includes(user.role_name)) {
+      extraRoleLinks += `<li><a class="dropdown-item py-2" href="/staff-checkin.html"><i class="bi bi-qr-code-scan me-2 text-info"></i>Soát Vé (Staff)</a></li>`;
+    }
+
+    authNav.innerHTML = `
+      <div class="dropdown">
+        <button class="btn btn-outline-cine dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-person-circle fs-5 text-rose"></i>
+          <span>${user.full_name}</span>
+          ${roleBadge}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" style="background:#1e293b; border: 1px solid rgba(255,255,255,0.1);">
+          <li><h6 class="dropdown-header text-muted">Tài khoản: ${user.email}</h6></li>
+          <li><a class="dropdown-item py-2" href="/my-tickets.html"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Vé Của Tôi</a></li>
+          ${extraRoleLinks}
+          <li><hr class="dropdown-divider border-secondary"></li>
+          <li><button class="dropdown-item py-2 text-danger" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất</button></li>
+        </ul>
+      </div>
+    `;
+  } else {
+    authNav.innerHTML = `
+      <button class="btn btn-outline-cine btn-sm px-3" data-bs-toggle="modal" data-bs-target="#loginModal">
+        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+      </button>
+      <button class="btn btn-primary-cine btn-sm px-3 ms-2" data-bs-toggle="modal" data-bs-target="#registerModal">
+        <i class="bi bi-person-plus me-1"></i> Đăng ký
+      </button>
+    `;
+  }
+}
+
+function handleLogout() {
+  removeToken();
+  showToast('Đã đăng xuất khỏi hệ thống.', 'info');
+  updateNavbarAuth();
+  setTimeout(() => {
+    window.location.href = '/index.html';
+  }, 500);
+}
+
+// Quick autofill credentials for testing
+function autofillLogin(role) {
+  const emailInput = document.getElementById('loginEmail');
+  const passInput = document.getElementById('loginPassword');
+  if (!emailInput || !passInput) return;
+
+  if (role === 'admin') {
+    emailInput.value = 'admin@cineevent.vn';
+    passInput.value = 'AdminPassword123!';
+  } else if (role === 'manager') {
+    emailInput.value = 'manager@cineevent.vn';
+    passInput.value = 'ManagerPassword123!';
+  } else if (role === 'staff') {
+    emailInput.value = 'staff@cineevent.vn';
+    passInput.value = 'StaffPassword123!';
+  } else if (role === 'customer') {
+    emailInput.value = 'customer@gmail.com';
+    passInput.value = 'CustomerPassword123!';
+  }
+}
+
+// Shared Auth Modals HTML generator
+function renderAuthModals() {
+  if (document.getElementById('loginModal')) return;
+
+  const modalHtml = `
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-white"><i class="bi bi-box-arrow-in-right me-2 text-rose"></i>Đăng Nhập CineEvent</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <!-- Quick demo buttons -->
+            <div class="mb-3 p-2 rounded bg-dark border border-secondary">
+              <div class="small text-muted mb-2 fw-bold"><i class="bi bi-lightning-charge text-warning me-1"></i>Tài khoản Demo (Nhấp để điền nhanh):</div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-xs btn-outline-danger btn-sm py-0" onclick="autofillLogin('admin')">Admin</button>
+                <button type="button" class="btn btn-xs btn-outline-warning btn-sm py-0" onclick="autofillLogin('manager')">Quản lý</button>
+                <button type="button" class="btn btn-xs btn-outline-info btn-sm py-0" onclick="autofillLogin('staff')">Nhân viên</button>
+                <button type="button" class="btn btn-xs btn-outline-light btn-sm py-0" onclick="autofillLogin('customer')">Khách hàng</button>
+              </div>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLoginForm(event)">
+              <div class="mb-3">
+                <label class="form-label text-muted small">Địa chỉ Email</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-envelope"></i></span>
+                  <input type="email" id="loginEmail" class="form-control" required placeholder="nhap-email@example.com">
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label text-muted small">Mật khẩu</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-key"></i></span>
+                  <input type="password" id="loginPassword" class="form-control" required placeholder="Nhập mật khẩu">
+                </div>
+              </div>
+              <button type="submit" id="loginSubmitBtn" class="btn btn-primary-cine w-100 py-2">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng Nhập
+              </button>
+            </form>
+          </div>
+          <div class="modal-footer justify-content-center border-0 pt-0">
+            <span class="text-muted small">Chưa có tài khoản? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" class="text-rose text-decoration-none fw-bold">Đăng ký ngay</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-white"><i class="bi bi-person-plus me-2 text-rose"></i>Đăng Ký Khách Hàng Mới</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="registerForm" onsubmit="handleRegisterForm(event)">
+              <div class="mb-3">
+                <label class="form-label text-muted small">Họ và tên</label>
+                <input type="text" id="regFullName" class="form-control" required placeholder="Ví dụ: Nguyễn Văn An">
+              </div>
+              <div class="mb-3">
+                <label class="form-label text-muted small">Số điện thoại</label>
+                <input type="tel" id="regPhone" class="form-control" placeholder="0912345678">
+              </div>
+              <div class="mb-3">
+                <label class="form-label text-muted small">Địa chỉ Email</label>
+                <input type="email" id="regEmail" class="form-control" required placeholder="an.nguyen@example.com">
+              </div>
+              <div class="mb-4">
+                <label class="form-label text-muted small">Mật khẩu (Tối thiểu 6 ký tự)</label>
+                <input type="password" id="regPassword" class="form-control" required minlength="6" placeholder="Mật khẩu bảo mật">
+              </div>
+              <button type="submit" id="regSubmitBtn" class="btn btn-primary-cine w-100 py-2">
+                <i class="bi bi-check2-circle me-1"></i> Tạo Tài Khoản
+              </button>
+            </form>
+          </div>
+          <div class="modal-footer justify-content-center border-0 pt-0">
+            <span class="text-muted small">Đã có tài khoản? <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="text-rose text-decoration-none fw-bold">Đăng nhập</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+async function handleLoginForm(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginSubmitBtn');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+
+  try {
+    const res = await apiCall('/auth/login', {
+      method: 'POST',
+      body: { email, password }
+    });
+
+    setToken(res.data.token);
+    setCurrentUser(res.data.user);
+
+    showToast(`Chào mừng trở lại, ${res.data.user.full_name}!`, 'success');
+
+    // Close modal
+    const modalEl = document.getElementById('loginModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    updateNavbarAuth();
+
+    // If on restricted page or page needing reload
+    if (window.location.pathname.includes('payment.html') || window.location.pathname.includes('booking.html')) {
+      window.location.reload();
+    }
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i> Đăng Nhập';
+  }
+}
+
+async function handleRegisterForm(e) {
+  e.preventDefault();
+  const full_name = document.getElementById('regFullName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const btn = document.getElementById('regSubmitBtn');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';
+
+  try {
+    const res = await apiCall('/auth/register', {
+      method: 'POST',
+      body: { full_name, phone, email, password }
+    });
+
+    setToken(res.data.token);
+    setCurrentUser(res.data.user);
+
+    showToast('Đăng ký thành công! Bạn đã được tự động đăng nhập.', 'success');
+
+    const modalEl = document.getElementById('registerModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    updateNavbarAuth();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Tạo Tài Khoản';
+  }
+}
+
+// Initialize on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  renderAuthModals();
+  updateNavbarAuth();
+});

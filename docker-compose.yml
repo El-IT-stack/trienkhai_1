@@ -1,0 +1,132 @@
+# ==============================================================================
+# CINEEVENT SYSTEM - DOCKER COMPOSE CONFIGURATION
+# Môn: Triển khai & Quản trị Hệ thống Phần mềm - Đề 11
+# ==============================================================================
+
+networks:
+  # Network 1: Frontend/Proxy network
+  cineevent-frontend-net:
+    driver: bridge
+  # Network 2: Internal Backend & Database network (Isolated from Nginx)
+  cineevent-backend-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  app_logs:
+    driver: local
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. MySQL Database Service
+  # ----------------------------------------------------------------------------
+  mysql:
+    image: mysql:8.0.37
+    container_name: cineevent-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Root_SecurePassword_2026!}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cineevent_db}
+      MYSQL_USER: ${MYSQL_USER:-cineevent_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-CineEvent_UserSecurePass_2026!}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./database/permissions.sql:/docker-entrypoint-initdb.d/03-permissions.sql:ro
+    # Hardening: Do NOT expose port 3306 to public network
+    expose:
+      - "3306"
+    networks:
+      - cineevent-backend-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Root_SecurePassword_2026!}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ----------------------------------------------------------------------------
+  # 2. phpMyAdmin Database GUI
+  # ----------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2.1
+    container_name: cineevent-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "127.0.0.1:${PMA_PORT:-8085}:80"
+    networks:
+      - cineevent-backend-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # 3. CineEvent Backend & Web App (Express.js + HTML5)
+  # ----------------------------------------------------------------------------
+  cineevent-app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cineevent-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_cineevent_change_in_production_2026!}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cineevent_db}
+      MYSQL_USER: ${MYSQL_USER:-cineevent_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-CineEvent_UserSecurePass_2026!}
+      LOG_DIR: /var/log/cineevent
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - app_logs:/var/log/cineevent
+    expose:
+      - "5000"
+    networks:
+      - cineevent-backend-net
+      - cineevent-frontend-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ----------------------------------------------------------------------------
+  # 4. Nginx Reverse Proxy & SSL Termination
+  # ----------------------------------------------------------------------------
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: cineevent-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_logs:/var/log/nginx
+      - ./certs:/etc/nginx/certs
+    networks:
+      - cineevent-frontend-net
+    depends_on:
+      cineevent-app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/stub_status > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
