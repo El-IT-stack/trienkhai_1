@@ -1,0 +1,265 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "1. TRẠNG THÁI HỆ THỐNG VÀ TARGETS GIÁM SÁT",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "values": false } },
+      "pluginVersion": "10.4.1",
+      "targets": [{ "datasource": "Prometheus", "expr": "up{job=\"cineevent-app\"}", "refId": "A" }],
+      "title": "App Backend (Node.js)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "values": false } },
+      "targets": [{ "datasource": "Prometheus", "expr": "up{job=\"nginx\"}", "refId": "A" }],
+      "title": "Nginx Reverse Proxy",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "values": false } },
+      "targets": [{ "datasource": "Prometheus", "expr": "up{job=\"mysql\"}", "refId": "A" }],
+      "title": "MySQL Database 8.0",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "values": false } },
+      "targets": [{ "datasource": "Prometheus", "expr": "up{job=\"cadvisor\"}", "refId": "A" }],
+      "title": "cAdvisor Container Agent",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "values": false } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(cineevent_http_requests_total) or vector(0)", "refId": "A" }],
+      "title": "Tổng HTTP Requests",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "currencyVND"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "values": false } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(cineevent_bookings_total) or vector(0)", "refId": "A" }],
+      "title": "Tổng Đơn Đặt Vé",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "2. HIỆU NĂNG VÀ LƯU LƯỢNG ỨNG DỤNG EXPRESS.JS",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 15, "gradientMode": "opacity", "lineWidth": 2, "spanNulls": false },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum by (route) (rate(cineevent_http_requests_total[1m]))", "legendFormat": "{{route}}", "refId": "A" }
+      ],
+      "title": "Lưu lượng Request theo Route (req/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 8,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum by (status_code) (rate(cineevent_http_requests_total[1m]))", "legendFormat": "HTTP {{status_code}}", "refId": "A" }
+      ],
+      "title": "Mã Phản Hồi HTTP (2xx, 4xx, 5xx)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 15, "lineWidth": 2 },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(cineevent_http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p95 Latency", "refId": "A" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(cineevent_http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p50 Latency (Median)", "refId": "B" }
+      ],
+      "title": "Thời Gian Phản Hồi HTTP (Latency p95 & p50)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 15, "lineWidth": 2 },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "nodejs_heap_size_used_bytes{service=\"cineevent-app\"} or cineevent_nodejs_heap_size_used_bytes", "legendFormat": "Heap Used", "refId": "A" },
+        { "datasource": "Prometheus", "expr": "nodejs_heap_size_total_bytes{service=\"cineevent-app\"} or cineevent_nodejs_heap_size_total_bytes", "legendFormat": "Heap Total", "refId": "B" }
+      ],
+      "title": "Bộ Nhớ Node.js Heap (Process RAM)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 102,
+      "title": "3. CHỈ SỐ NGINX REVERSE PROXY VÀ DATABASE MYSQL",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "id": 11,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "nginx_connections_active", "legendFormat": "Active Connections", "refId": "A" },
+        { "datasource": "Prometheus", "expr": "nginx_connections_reading", "legendFormat": "Reading", "refId": "B" },
+        { "datasource": "Prometheus", "expr": "nginx_connections_writing", "legendFormat": "Writing", "refId": "C" },
+        { "datasource": "Prometheus", "expr": "nginx_connections_waiting", "legendFormat": "Waiting", "refId": "D" }
+      ],
+      "title": "Nginx Connections (Active / Reading / Writing / Waiting)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+      "id": 12,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_queries[1m])", "legendFormat": "Queries/sec", "refId": "A" },
+        { "datasource": "Prometheus", "expr": "mysql_global_status_threads_connected", "legendFormat": "Threads Connected", "refId": "B" },
+        { "datasource": "Prometheus", "expr": "mysql_global_status_threads_running", "legendFormat": "Threads Running", "refId": "C" }
+      ],
+      "title": "MySQL Performance (Queries/sec & Threads Connected)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["cineevent", "prometheus", "monitoring", "devops"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"] },
+  "timezone": "browser",
+  "title": "CineEvent — Hạ Tầng Giám Sát Prometheus & Grafana",
+  "uid": "cineevent-overview",
+  "version": 1
+}

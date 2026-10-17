@@ -1,0 +1,27 @@
+# ==============================================================================
+# GRAFANA DATASOURCE PROVISIONING
+# ==============================================================================
+
+apiVersion: 1
+
+datasources:
+  # 1. Prometheus Datasource
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 5s
+      httpMethod: POST
+
+  # 2. Loki Datasource (Centralized Logging)
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: false
+    jsonData:
+      maxLines: 1000

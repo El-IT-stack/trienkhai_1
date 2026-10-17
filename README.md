@@ -121,12 +121,42 @@ docker compose logs -f
 
 ## 5. Địa chỉ truy cập các dịch vụ
 
-| Dịch vụ | URL Truy Cập | Mục đích |
+| **Dịch vụ** | **URL Truy Cập** | **Mục đích** |
 | :--- | :--- | :--- |
 | **Website CineEvent (Nginx)** | [http://localhost](http://localhost) hoặc [https://localhost](https://localhost) | Cổng giao diện chính của người dùng |
 | **phpMyAdmin** | [http://127.0.0.1:8085](http://127.0.0.1:8085) | Quản trị CSDL MySQL trực quan |
+| **Prometheus Dashboard** | [http://localhost:9090](http://localhost:9090) | Giao diện truy vấn Metrics và Target Health |
+| **Grafana Monitoring** | [http://localhost:3000](http://localhost:3000) | Dashboard giám sát trực quan (user: `admin` / pass: `Grafana_AdminSecurePass_2026!`) |
+| **cAdvisor Container Monitor** | [http://localhost:8081](http://localhost:8081) | Giám sát tài nguyên CPU, RAM của từng Container |
 | **Health Check API** | [http://localhost/health](http://localhost/health) | Kiểm tra trạng thái sẵn sàng của App |
 | **Prometheus Metrics** | [http://localhost/metrics](http://localhost/metrics) | Endpoint thu thập metrics ứng dụng |
+| **Nginx Exporter Metrics** | [http://localhost:9113/metrics](http://localhost:9113/metrics) | Metrics của máy chủ web Nginx |
+| **MySQL Exporter Metrics** | [http://localhost:9104/metrics](http://localhost:9104/metrics) | Metrics của cơ sở dữ liệu MySQL |
+
+---
+
+## 6. Hướng dẫn giám sát hệ thống với Prometheus & Grafana
+
+### 6.1. Kiểm tra trạng thái các Target trên Prometheus
+Truy cập [http://localhost:9090/targets](http://localhost:9090/targets). Tất cả 5 Target phải ở trạng thái **UP (1/1)**:
+- `cadvisor`: Thu thập CPU/RAM của các container (`cadvisor:8080/metrics`).
+- `cineevent-app`: Thu thập HTTP request rate, response time và process metrics (`cineevent-app:5000/metrics`).
+- `nginx`: Thu thập số kết nối active/reading/writing/waiting (`nginx-exporter:9113/metrics`).
+- `mysql`: Thu thập truy vấn queries/sec, threads connected (`mysql-exporter:9104/metrics`).
+- `prometheus`: Giám sát chính Prometheus server (`localhost:9090/metrics`).
+
+### 6.2. Truy cập Dashboard Grafana
+1. Mở trình duyệt tại [http://localhost:3000](http://localhost:3000).
+2. Đăng nhập với tài khoản:
+   - **Tên đăng nhập:** `admin`
+   - **Mật khẩu:** `Grafana_AdminSecurePass_2026!`
+3. Vào menu **Dashboards** &rarr; Chọn thư mục **CineEvent** &rarr; Mở dashboard **CineEvent — Hạ Tầng Giám Sát Prometheus & Grafana**.
+4. Dashboard đã được cấu hình tự động (Provisioning) với đầy đủ các bảng chỉ số:
+   - **Trạng thái hệ thống (System Health):** 4 ô trạng thái UP/DOWN của App, Nginx, MySQL, cAdvisor.
+   - **Hiệu năng ứng dụng (Application Metrics):** Tần suất request (req/s), phân bổ mã HTTP 2xx/4xx/5xx, thời gian phản hồi Latency (p95 và p50), bộ nhớ Heap RAM.
+   - **Nginx Reverse Proxy:** Kết nối active, reading, writing, waiting.
+   - **MySQL Database:** Số lượng truy vấn trên giây, số luồng kết nối đồng thời.
+   - **Nghiệp vụ CineEvent:** Tổng số đơn đặt vé và giao dịch thanh toán thành công.
 
 ---
 

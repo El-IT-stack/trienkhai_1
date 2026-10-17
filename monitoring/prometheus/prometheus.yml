@@ -1,0 +1,44 @@
+# ==============================================================================
+# CINEEVENT PROMETHEUS CONFIGURATION
+# ==============================================================================
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  scrape_timeout: 4s
+
+scrape_configs:
+  # 1. Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 2. CineEvent Express.js Application metrics
+  - job_name: 'cineevent-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['cineevent-app:5000']
+        labels:
+          service: 'cineevent-app'
+          environment: 'production'
+
+  # 3. Nginx Prometheus Exporter (stub_status)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+        labels:
+          service: 'nginx'
+
+  # 4. MySQL Exporter (Database performance & connections)
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+        labels:
+          service: 'mysql'
+
+  # 5. cAdvisor (Container Resource metrics)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'cadvisor'

@@ -18,6 +18,10 @@ volumes:
     driver: local
   app_logs:
     driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
 
 services:
   # ----------------------------------------------------------------------------
@@ -130,3 +134,103 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  # ----------------------------------------------------------------------------
+  # 5. Nginx Prometheus Exporter
+  # ----------------------------------------------------------------------------
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    container_name: cineevent-nginx-exporter
+    restart: unless-stopped
+    command:
+      - -nginx.scrape-uri=http://nginx/stub_status
+    ports:
+      - "9113:9113"
+    networks:
+      - cineevent-frontend-net
+    depends_on:
+      nginx:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # 6. MySQL Prometheus Exporter
+  # ----------------------------------------------------------------------------
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: cineevent-mysql-exporter
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/mysqld-exporter/.my.cnf:/etc/.my.cnf:ro
+    command:
+      - --config.my-cnf=/etc/.my.cnf
+    ports:
+      - "9104:9104"
+    networks:
+      - cineevent-backend-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # 7. cAdvisor Container Metrics Collector
+  # ----------------------------------------------------------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cineevent-cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8081:8080"
+    networks:
+      - cineevent-frontend-net
+
+  # ----------------------------------------------------------------------------
+  # 8. Prometheus Server
+  # ----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: cineevent-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    networks:
+      - cineevent-frontend-net
+      - cineevent-backend-net
+    depends_on:
+      - cineevent-app
+      - nginx-exporter
+      - mysql-exporter
+
+  # ----------------------------------------------------------------------------
+  # 9. Grafana Visualization & Dashboards
+  # ----------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: cineevent-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-Grafana_AdminSecurePass_2026!}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - cineevent-frontend-net
+    depends_on:
+      - prometheus
