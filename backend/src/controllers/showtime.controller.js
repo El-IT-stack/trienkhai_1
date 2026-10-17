@@ -5,13 +5,12 @@ const ShowtimeController = {
   async getShowtimes(req, res, next) {
     try {
       const { movie_id, date } = req.query;
-      if (!movie_id) {
-        return res.status(400).json({
-          success: false,
-          message: 'Vui lòng cung cấp mã phim (movie_id).'
-        });
+      let showtimes;
+      if (movie_id) {
+        showtimes = await ShowtimeModel.getByMovieId(movie_id, date);
+      } else {
+        showtimes = await ShowtimeModel.getAll(date);
       }
-      const showtimes = await ShowtimeModel.getByMovieId(movie_id, date);
       res.json({
         success: true,
         count: showtimes.length,

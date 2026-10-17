@@ -119,25 +119,26 @@ body {
 }
 
 .hero-slide-item {
-  height: 440px;
+  height: 460px;
   background-size: cover;
   background-position: center;
   position: relative;
-  display: flex;
-  align-items: flex-end;
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10, 14, 23, 0.95) 10%, rgba(10, 14, 23, 0.5) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(10, 14, 23, 0.95) 15%, rgba(10, 14, 23, 0.5) 60%, transparent 100%);
+  pointer-events: none;
 }
 
 .hero-content {
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  left: 0;
   z-index: 2;
   padding: 2.5rem;
-  max-width: 700px;
+  max-width: 750px;
 }
 
 /* Movie & Event Cards */

@@ -1,5 +1,6 @@
 const StatsModel = require('../models/stats.model');
 const UserModel = require('../models/user.model');
+const { getPool } = require('../config/database');
 
 const AdminController = {
   async getDashboardStats(req, res, next) {
@@ -111,6 +112,25 @@ const AdminController = {
         success: true,
         count: logs.length,
         data: logs
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async getCinemasAndRooms(req, res, next) {
+    try {
+      const pool = getPool();
+      const [cinemas] = await pool.query('SELECT * FROM cinemas ORDER BY id ASC');
+      const [rooms] = await pool.query(
+        `SELECT r.*, c.name as cinema_name, c.city as cinema_city 
+         FROM rooms r 
+         JOIN cinemas c ON r.cinema_id = c.id 
+         ORDER BY r.cinema_id, r.id`
+      );
+      res.json({
+        success: true,
+        data: { cinemas, rooms }
       });
     } catch (err) {
       next(err);

@@ -1,6 +1,28 @@
 const { getPool } = require('../config/database');
 
 const ShowtimeModel = {
+  async getAll(date = null) {
+    const pool = getPool();
+    let query = `
+      SELECT s.*, 
+             r.name as room_name, r.screen_type,
+             c.id as cinema_id, c.name as cinema_name, c.city as cinema_city, c.address as cinema_address,
+             m.title as movie_title, m.duration, m.poster_url, m.age_rating
+      FROM showtimes s
+      JOIN rooms r ON s.room_id = r.id
+      JOIN cinemas c ON r.cinema_id = c.id
+      JOIN movies m ON s.movie_id = m.id
+    `;
+    const params = [];
+    if (date) {
+      query += ` WHERE DATE(s.start_time) = ?`;
+      params.push(date);
+    }
+    query += ` ORDER BY s.start_time ASC`;
+    const [rows] = await pool.query(query, params);
+    return rows;
+  },
+
   async getByMovieId(movieId, date = null) {
     const pool = getPool();
     let query = `

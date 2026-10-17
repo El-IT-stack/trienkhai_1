@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Điều Hành & Quản Lý Rạp — CineEvent Manager</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
+        <i class="bi bi-film text-danger fs-3"></i>
+        <span>Cine<span class="brand-badge">Event</span></span>
+      </a>
+
+      <button class="navbar-toggler border-0 text-white" type="button" data-bs-target="#mainNavbar" data-bs-toggle="collapse">
+        <i class="bi bi-list fs-2"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+          <li class="nav-item"><a class="nav-link" href="/index.html"><i class="bi bi-house-door me-1"></i> Trang Chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/movies.html"><i class="bi bi-camera-reels me-1"></i> Phim Chiếu Rạp</a></li>
+          <li class="nav-item"><a class="nav-link" href="/events.html"><i class="bi bi-calendar-event me-1"></i> Sự Kiện</a></li>
+          <li class="nav-item"><a class="nav-link active text-warning fw-bold" href="/manager.html"><i class="bi bi-briefcase-fill me-1"></i> Cổng Quản Lý</a></li>
+        </ul>
+        <div id="navbarAuthSection" class="d-flex align-items-center"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Quick Role Demo Switcher Bar -->
+  <div class="bg-dark border-bottom border-secondary py-2">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="small text-muted d-flex align-items-center gap-2">
+        <span class="badge bg-warning text-dark"><i class="bi bi-briefcase-fill me-1"></i>Vai Trò Quản Lý (Manager)</span>
+        <span>Phụ trách: Rạp, Suất Chiếu, Giá Vé, Báo Cáo Doanh Thu & Nhân Viên</span>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <span class="small text-muted me-1">Chuyển vai trò demo:</span>
+        <button class="btn btn-xs btn-outline-danger btn-sm py-0" onclick="quickSwitchRole('admin')">👑 Admin</button>
+        <button class="btn btn-xs btn-warning btn-sm py-0 text-dark fw-bold" onclick="quickSwitchRole('manager')">💼 Quản Lý</button>
+        <button class="btn btn-xs btn-outline-info btn-sm py-0" onclick="quickSwitchRole('staff')">🎟️ Nhân Viên</button>
+        <button class="btn btn-xs btn-outline-light btn-sm py-0" onclick="quickSwitchRole('customer')">👤 Khách Hàng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="container my-4">
+    <div id="managerAccessAlert" class="d-none"></div>
+
+    <div id="managerPortalContent">
+      <!-- Title & Header -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold text-white mb-1">
+            <i class="bi bi-briefcase text-warning me-2"></i>Bảng Điều Hành Rạp & Suất Chiếu
+          </h2>
+          <p class="text-muted small mb-0">Quản lý cụm rạp, lập lịch suất chiếu, định giá vé và giám sát doanh thu</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="/staff.html" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1">
+            <i class="bi bi-person-badge"></i> Cổng Nhân Viên
+          </a>
+          <button class="btn btn-warning btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#addShowtimeModal">
+            <i class="bi bi-calendar-plus me-1"></i> Thêm Suất Chiếu
+          </button>
+          <button class="btn btn-primary-cine btn-sm" data-bs-toggle="modal" data-bs-target="#addMovieModal">
+            <i class="bi bi-plus-lg me-1"></i> Thêm Phim
+          </button>
+          <button class="btn btn-outline-cine btn-sm" onclick="loadManagerData()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Stat Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="glass-card p-4">
+            <div class="text-muted small mb-1"><i class="bi bi-currency-dollar text-success me-1"></i>Doanh Thu Cụm Rạp</div>
+            <h3 class="fw-bold text-warning mb-0" id="mgrRevenue">...</h3>
+            <span class="text-muted small" style="font-size:0.75rem;">Giao dịch giả lập thành công</span>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="glass-card p-4">
+            <div class="text-muted small mb-1"><i class="bi bi-ticket-perforated-fill text-danger me-1"></i>Vé Bán Ra</div>
+            <h3 class="fw-bold text-white mb-0" id="mgrTickets">...</h3>
+            <span class="text-muted small" style="font-size:0.75rem;">Tổng số vé đã xuất</span>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="glass-card p-4">
+            <div class="text-muted small mb-1"><i class="bi bi-calendar-check-fill text-info me-1"></i>Suất Chiếu Đang Lên Lịch</div>
+            <h3 class="fw-bold text-white mb-0" id="mgrShowtimesCount">...</h3>
+            <span class="text-muted small" style="font-size:0.75rem;">Các phòng chiếu trong hệ thống</span>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="glass-card p-4">
+            <div class="text-muted small mb-1"><i class="bi bi-people-fill text-primary me-1"></i>Nhân Viên Thuộc Quyền</div>
+            <h3 class="fw-bold text-white mb-0" id="mgrStaffCount">...</h3>
+            <span class="text-muted small" style="font-size:0.75rem;">Nhân viên ca trực quầy & soát vé</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <ul class="nav nav-pills mb-4 border-bottom border-secondary pb-3 gap-2" id="managerTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active btn-sm" data-bs-toggle="pill" data-bs-target="#tab-mgr-showtimes" type="button">
+            <i class="bi bi-calendar3 me-1"></i> Quản Lý Suất Chiếu (Showtimes)
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link btn-sm" data-bs-toggle="pill" data-bs-target="#tab-mgr-revenue" type="button">
+            <i class="bi bi-bar-chart-line me-1"></i> Báo Cáo Doanh Thu
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link btn-sm" data-bs-toggle="pill" data-bs-target="#tab-mgr-cinemas" type="button">
+            <i class="bi bi-building me-1"></i> Cụm Rạp & Phòng Chiếu
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link btn-sm" data-bs-toggle="pill" data-bs-target="#tab-mgr-movies" type="button">
+            <i class="bi bi-film me-1"></i> Danh Mục Phim & Giá Vé
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link btn-sm" data-bs-toggle="pill" data-bs-target="#tab-mgr-staff" type="button">
+            <i class="bi bi-person-badge me-1"></i> Giám Sát Hoạt Động Nhân Viên
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tab Content Panels -->
+      <div class="tab-content">
+        <!-- 1. Showtimes Management Tab -->
+        <div class="tab-pane fade show active" id="tab-mgr-showtimes" role="tabpanel">
+          <div class="glass-card p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+              <h5 class="fw-bold text-white mb-0"><i class="bi bi-calendar-event text-warning me-2"></i>Danh Sách Lịch Chiếu Phim</h5>
+              <button class="btn btn-warning btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#addShowtimeModal">
+                <i class="bi bi-plus-lg me-1"></i> Tạo Suất Chiếu Mới
+              </button>
+            </div>
+            <div id="mgrShowtimesTable" class="table-responsive">Đang tải lịch chiếu...</div>
+          </div>
+        </div>
+
+        <!-- 2. Revenue Report Tab -->
+        <div class="tab-pane fade" id="tab-mgr-revenue" role="tabpanel">
+          <div class="row g-4">
+            <div class="col-lg-6">
+              <div class="glass-card p-4">
+                <h5 class="fw-bold text-white mb-3"><i class="bi bi-film text-danger me-2"></i>Doanh Thu Theo Phim Chiếu Rạp</h5>
+                <div id="mgrMovieRevenueTable" class="table-responsive">Đang tải...</div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="glass-card p-4">
+                <h5 class="fw-bold text-white mb-3"><i class="bi bi-stars text-warning me-2"></i>Doanh Thu Theo Sự Kiện Biểu Diễn</h5>
+                <div id="mgrEventRevenueTable" class="table-responsive">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Cinemas & Rooms Tab -->
+        <div class="tab-pane fade" id="tab-mgr-cinemas" role="tabpanel">
+          <div class="glass-card p-4">
+            <h5 class="fw-bold text-white mb-3"><i class="bi bi-building text-info me-2"></i>Hệ Thống Rạp & Phòng Chiếu CineEvent</h5>
+            <div id="mgrCinemasList" class="row g-4">Đang tải danh sách rạp...</div>
+          </div>
+        </div>
+
+        <!-- 4. Movies Management Tab -->
+        <div class="tab-pane fade" id="tab-mgr-movies" role="tabpanel">
+          <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold text-white mb-0"><i class="bi bi-film text-danger me-2"></i>Danh Mục Phim & Bảng Giá Vé</h5>
+              <button class="btn btn-primary-cine btn-sm" data-bs-toggle="modal" data-bs-target="#addMovieModal">
+                <i class="bi bi-plus-lg me-1"></i> Thêm Phim Mới
+              </button>
+            </div>
+            <div id="mgrMoviesTable" class="table-responsive">Đang tải...</div>
+          </div>
+        </div>
+
+        <!-- 5. Staff Monitoring Tab -->
+        <div class="tab-pane fade" id="tab-mgr-staff" role="tabpanel">
+          <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
+              <h5 class="fw-bold text-white mb-0"><i class="bi bi-person-badge text-info me-2"></i>Lịch Sử Ca Trực & Soát Vé Của Nhân Viên</h5>
+              <button class="btn btn-outline-secondary btn-sm text-white" onclick="loadStaffMonitoring()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+              </button>
+            </div>
+            <div id="mgrStaffCheckinsTable" class="table-responsive">Đang tải dữ liệu...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Showtime Modal -->
+  <div class="modal fade" id="addShowtimeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-card">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-white"><i class="bi bi-calendar-plus text-warning me-2"></i>Thêm Suất Chiếu Mới</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="addShowtimeForm" onsubmit="handleCreateShowtime(event)">
+            <div class="mb-3">
+              <label class="form-label small text-muted">Chọn Phim</label>
+              <select id="stMovieSelect" class="form-select bg-dark text-white border-secondary" required>
+                <option value="">-- Chọn phim --</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-muted">Chọn Phòng Chiếu (Rạp)</label>
+              <select id="stRoomSelect" class="form-select bg-dark text-white border-secondary" required>
+                <option value="">-- Chọn phòng chiếu --</option>
+              </select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small text-muted">Thời Gian Bắt Đầu</label>
+                <input type="datetime-local" id="stStartTime" class="form-control bg-dark text-white border-secondary" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small text-muted">Thời Gian Kết Thúc</label>
+                <input type="datetime-local" id="stEndTime" class="form-control bg-dark text-white border-secondary" required>
+              </div>
+            </div>
+            <div class="row g-2 mb-4">
+              <div class="col-6">
+                <label class="form-label small text-muted">Giá Ghế Standard (VNĐ)</label>
+                <input type="number" id="stPriceStandard" class="form-control bg-dark text-white border-secondary" value="95000" step="5000" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small text-muted">Giá Ghế VIP (VNĐ)</label>
+                <input type="number" id="stPriceVip" class="form-control bg-dark text-white border-secondary" value="115000" step="5000" required>
+              </div>
+            </div>
+            <div class="text-end">
+              <button type="button" class="btn btn-outline-secondary btn-sm me-2 text-white" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-warning btn-sm text-dark fw-bold px-4">Lưu Suất Chiếu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Movie Modal -->
+  <div class="modal fade" id="addMovieModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-card">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-white"><i class="bi bi-film text-danger me-2"></i>Thêm Phim Mới Vào Hệ Thống</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="addMovieForm" onsubmit="handleCreateMovie(event)">
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label small text-muted">Tên Phim</label>
+                <input type="text" id="newMovieTitle" class="form-control bg-dark text-white border-secondary" required placeholder="Ví dụ: Avatar 3">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Thời Lượng (Phút)</label>
+                <input type="number" id="newMovieDuration" class="form-control bg-dark text-white border-secondary" required value="120">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Thể Loại</label>
+                <select id="newMovieGenre" class="form-select bg-dark text-white border-secondary">
+                  <option value="1">Hành Động & Phiêu Lưu</option>
+                  <option value="2">Khoa Học Viễn Tưởng</option>
+                  <option value="3">Tâm Lý & Tình Cảm</option>
+                  <option value="4">Hoạt Hình & Gia Đình</option>
+                  <option value="5">Kinh Dị & Giật Gân</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Độ Tuổi</label>
+                <select id="newMovieAge" class="form-select bg-dark text-white border-secondary">
+                  <option value="P">P - Mọi lứa tuổi</option>
+                  <option value="K">K - Dưới 13 tuổi</option>
+                  <option value="T13">T13 - Từ 13 tuổi</option>
+                  <option value="T16">T16 - Từ 16 tuổi</option>
+                  <option value="T18">T18 - Từ 18 tuổi</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Đạo Diễn</label>
+                <input type="text" id="newMovieDirector" class="form-control bg-dark text-white border-secondary" placeholder="Tên đạo diễn">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Ngày Khởi Chiếu</label>
+                <input type="date" id="newMovieRelease" class="form-control bg-dark text-white border-secondary" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-muted">Tóm Tắt Nội Dung</label>
+                <textarea id="newMovieDesc" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Tóm tắt phim..."></textarea>
+              </div>
+            </div>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-outline-secondary btn-sm me-2 text-white" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-primary-cine btn-sm px-4">Lưu Phim Mới</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-auto py-4 border-top border-secondary" style="background: #070a10;">
+    <div class="container text-center text-muted small">
+      CineEvent — Hệ Thống Đặt Vé Xem Phim & Sự Kiện | Sinh viên: [HỌ VÀ TÊN] - MSSV: [MSSV] - Lớp: [LỚP]
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let globalMovies = [];
+    let globalRooms = [];
+
+    async function loadManagerData() {
+      const user = getCurrentUser();
+      if (!user || !['admin', 'manager'].includes(user.role_name)) {
+        document.getElementById('managerPortalContent').classList.add('d-none');
+        const alertBox = document.getElementById('managerAccessAlert');
+        alertBox.className = 'alert alert-warning glass-card text-center my-4';
+        alertBox.innerHTML = `
+          <h4><i class="bi bi-shield-lock me-2"></i>Khu Vực Dành Cho Quản Lý (Manager)</h4>
+          <p class="mb-3">Bạn chưa đăng nhập hoặc không có vai trò Quản Lý / Admin.</p>
+          <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="quickSwitchRole('manager')">
+            Đăng nhập nhanh vai trò Quản Lý (Demo)
+          </button>
+        `;
+        alertBox.classList.remove('d-none');
+        return;
+      }
+
+      // 1. Load Stats
+      try {
+        const res = await apiCall('/admin/stats');
+        const data = res.data;
+        document.getElementById('mgrRevenue').textContent = formatVND(data.revenue);
+        document.getElementById('mgrTickets').textContent = (data.tickets.total_tickets || 0).toLocaleString();
+        document.getElementById('mgrStaffCount').textContent = "3 nhân viên";
+      } catch (e) {}
+
+      // 2. Load Showtimes
+      await loadShowtimesList();
+
+      // 3. Load Cinemas & Rooms
+      await loadCinemasAndRooms();
+
+      // 4. Load Movies
+      await loadMoviesList();
+
+      // 5. Load Revenue
+      await loadRevenueReport();
+
+      // 6. Load Staff Check-ins
+      await loadStaffMonitoring();
+    }
+
+    async function loadShowtimesList() {
+      try {
+        const res = await apiCall('/showtimes');
+        const showtimes = res.data || [];
+        document.getElementById('mgrShowtimesCount').textContent = showtimes.length + " suất";
+        
+        let html = `
+          <table class="table table-dark table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-muted small">
+                <th>ID</th>
+                <th>Phim</th>
+                <th>Rạp & Phòng</th>
+                <th>Thời Gian</th>
+                <th>Giá Standard</th>
+                <th>Giá VIP</th>
+                <th>Trạng Thái</th>
+                <th class="text-end">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        showtimes.forEach(st => {
+          html += `
+            <tr>
+              <td class="font-monospace text-muted">#${st.id}</td>
+              <td class="fw-bold text-white">${st.movie_title}</td>
+              <td><span class="badge bg-secondary me-1">${st.cinema_name}</span> ${st.room_name}</td>
+              <td class="small text-info">${formatDateTime(st.start_time)}</td>
+              <td>${formatVND(st.price_standard)}</td>
+              <td class="text-warning">${formatVND(st.price_vip)}</td>
+              <td><span class="badge bg-success">${st.status}</span></td>
+              <td class="text-end">
+                <button class="btn btn-outline-danger btn-xs btn-sm py-0" onclick="deleteShowtime(${st.id})">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table>`;
+        document.getElementById('mgrShowtimesTable').innerHTML = html;
+      } catch (e) {
+        document.getElementById('mgrShowtimesTable').innerHTML = '<div class="text-danger small">Lỗi tải lịch chiếu: ' + e.message + '</div>';
+      }
+    }
+
+    async function loadCinemasAndRooms() {
+      try {
+        const res = await apiCall('/admin/cinemas-rooms');
+        const { cinemas, rooms } = res.data;
+        globalRooms = rooms;
+
+        // Populate modal select
+        const roomSelect = document.getElementById('stRoomSelect');
+        if (roomSelect) {
+          roomSelect.innerHTML = '<option value="">-- Chọn phòng chiếu --</option>' + 
+            rooms.map(r => `<option value="${r.id}">${r.cinema_name} — ${r.name} (${r.total_seats} ghế)</option>`).join('');
+        }
+
+        let html = '';
+        cinemas.forEach(c => {
+          const cRooms = rooms.filter(r => r.cinema_id === c.id);
+          html += `
+            <div class="col-md-6">
+              <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="fw-bold text-white mb-0"><i class="bi bi-geo-alt-fill text-danger me-1"></i>${c.name}</h5>
+                  <span class="badge bg-primary">${c.city}</span>
+                </div>
+                <p class="text-muted small mb-3">${c.address} | ĐT: ${c.phone}</p>
+                <h6 class="small fw-bold text-warning mb-2">Phòng chiếu trực thuộc:</h6>
+                <div class="d-flex flex-column gap-2">
+          `;
+          cRooms.forEach(r => {
+            html += `
+              <div class="d-flex justify-content-between align-items-center p-2 rounded bg-dark border border-secondary small">
+                <span><i class="bi bi-door-open me-2 text-info"></i>${r.name}</span>
+                <div>
+                  <span class="badge bg-secondary me-2">${r.screen_type}</span>
+                  <span class="text-muted">${r.total_seats} ghế ngồi</span>
+                </div>
+              </div>
+            `;
+          });
+          html += `</div></div></div>`;
+        });
+        document.getElementById('mgrCinemasList').innerHTML = html;
+      } catch (e) {
+        document.getElementById('mgrCinemasList').innerHTML = '<div class="text-danger small">Lỗi tải rạp: ' + e.message + '</div>';
+      }
+    }
+
+    async function loadMoviesList() {
+      try {
+        const res = await apiCall('/movies');
+        globalMovies = res.data || [];
+        
+        // Populate modal select
+        const mSelect = document.getElementById('stMovieSelect');
+        if (mSelect) {
+          mSelect.innerHTML = '<option value="">-- Chọn phim --</option>' + 
+            globalMovies.map(m => `<option value="${m.id}">${m.title} (${m.duration} phút)</option>`).join('');
+        }
+
+        let html = `
+          <table class="table table-dark table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-muted small">
+                <th>ID</th>
+                <th>Áp Phích</th>
+                <th>Tên Phim</th>
+                <th>Thể Loại</th>
+                <th>Thời Lượng</th>
+                <th>Độ Tuổi</th>
+                <th>Trạng Thái</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        globalMovies.forEach(m => {
+          html += `
+            <tr>
+              <td class="font-monospace text-muted">#${m.id}</td>
+              <td><img src="${m.poster_url}" width="38" height="54" style="object-fit:cover; border-radius:4px;"></td>
+              <td class="fw-bold text-white">${m.title}</td>
+              <td><span class="badge bg-secondary">${m.genre_name || 'Phim'}</span></td>
+              <td>${m.duration} phút</td>
+              <td><span class="badge bg-danger">${m.age_rating}</span></td>
+              <td><span class="badge ${m.status === 'now_showing' ? 'bg-success' : 'bg-warning text-dark'}">${m.status}</span></td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table>`;
+        document.getElementById('mgrMoviesTable').innerHTML = html;
+      } catch (e) {}
+    }
+
+    async function loadRevenueReport() {
+      try {
+        const res = await apiCall('/admin/reports/revenue');
+        const { movies, events } = res.data;
+
+        let mHtml = '<table class="table table-dark table-sm mb-0"><thead><tr class="text-muted small"><th>Phim</th><th class="text-center">Vé</th><th class="text-end">Doanh Thu</th></tr></thead><tbody>';
+        movies.forEach(m => {
+          mHtml += `<tr><td class="text-white">${m.title}</td><td class="text-center">${m.tickets_sold}</td><td class="text-end text-warning fw-bold">${formatVND(m.total_revenue)}</td></tr>`;
+        });
+        mHtml += '</tbody></table>';
+        document.getElementById('mgrMovieRevenueTable').innerHTML = mHtml;
+
+        let eHtml = '<table class="table table-dark table-sm mb-0"><thead><tr class="text-muted small"><th>Sự Kiện</th><th class="text-center">Vé</th><th class="text-end">Doanh Thu</th></tr></thead><tbody>';
+        events.forEach(ev => {
+          eHtml += `<tr><td class="text-white">${ev.title}</td><td class="text-center">${ev.tickets_sold}</td><td class="text-end text-warning fw-bold">${formatVND(ev.total_revenue)}</td></tr>`;
+        });
+        eHtml += '</tbody></table>';
+        document.getElementById('mgrEventRevenueTable').innerHTML = eHtml;
+      } catch (e) {}
+    }
+
+    async function loadStaffMonitoring() {
+      try {
+        const res = await apiCall('/tickets/staff/recent-checkins');
+        const checkins = res.data || [];
+        let html = `
+          <table class="table table-dark table-hover table-sm mb-0 align-middle">
+            <thead>
+              <tr class="text-muted small">
+                <th>Thời Gian</th>
+                <th>Mã Vé</th>
+                <th>Khách Hàng</th>
+                <th>Suất Chiếu / Sự Kiện</th>
+                <th>Nhân Viên Soát</th>
+                <th>Trạng Thái</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        checkins.forEach(c => {
+          html += `
+            <tr>
+              <td class="small text-info">${formatDateTime(c.checkin_time)}</td>
+              <td class="font-monospace text-warning fw-bold">${c.ticket_code}</td>
+              <td class="text-white">${c.customer_name}</td>
+              <td>${c.movie_title || c.event_title || 'Suất chiếu'}</td>
+              <td><span class="badge bg-secondary">${c.staff_name || 'Lê Thị Thu Ngân Viên'}</span></td>
+              <td><span class="badge bg-success">Đã qua cửa</span></td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table>`;
+        document.getElementById('mgrStaffCheckinsTable').innerHTML = html;
+      } catch (e) {
+        document.getElementById('mgrStaffCheckinsTable').innerHTML = '<div class="text-muted small">Chưa có lượt soát vé nào trong ca trực.</div>';
+      }
+    }
+
+    async function handleCreateShowtime(e) {
+      e.preventDefault();
+      const movie_id = document.getElementById('stMovieSelect').value;
+      const room_id = document.getElementById('stRoomSelect').value;
+      const start_time = document.getElementById('stStartTime').value;
+      const end_time = document.getElementById('stEndTime').value;
+      const price_standard = document.getElementById('stPriceStandard').value;
+      const price_vip = document.getElementById('stPriceVip').value;
+
+      try {
+        await apiCall('/showtimes', {
+          method: 'POST',
+          body: { movie_id, room_id, start_time, end_time, price_standard, price_vip }
+        });
+        showToast('Tạo suất chiếu mới thành công!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('addShowtimeModal')).hide();
+        loadShowtimesList();
+      } catch (err) {
+        showToast(err.message, 'danger');
+      }
+    }
+
+    async function deleteShowtime(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa suất chiếu #' + id + '?')) return;
+      try {
+        await apiCall('/showtimes/' + id, { method: 'DELETE' });
+        showToast('Đã xóa suất chiếu #' + id, 'success');
+        loadShowtimesList();
+      } catch (err) {
+        showToast(err.message, 'danger');
+      }
+    }
+
+    async function handleCreateMovie(e) {
+      e.preventDefault();
+      const title = document.getElementById('newMovieTitle').value;
+      const duration = document.getElementById('newMovieDuration').value;
+      const genre_id = document.getElementById('newMovieGenre').value;
+      const age_rating = document.getElementById('newMovieAge').value;
+      const director = document.getElementById('newMovieDirector').value;
+      const release_date = document.getElementById('newMovieRelease').value;
+      const description = document.getElementById('newMovieDesc').value;
+
+      try {
+        await apiCall('/movies', {
+          method: 'POST',
+          body: { title, duration, genre_id, age_rating, director, release_date, description }
+        });
+        showToast('Thêm phim mới thành công!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('addMovieModal')).hide();
+        loadMoviesList();
+      } catch (err) {
+        showToast(err.message, 'danger');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadManagerData();
+    });
+  </script>
+</body>
+</html>

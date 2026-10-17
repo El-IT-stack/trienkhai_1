@@ -7,6 +7,7 @@ const dbConfig = {
   user: process.env.MYSQL_USER || 'cineevent_user',
   password: process.env.MYSQL_PASSWORD || 'CineEvent_UserSecurePass_2026!',
   database: process.env.MYSQL_DATABASE || 'cineevent_db',
+  charset: 'utf8mb4',
   waitForConnections: true,
   connectionLimit: 15,
   queueLimit: 0,

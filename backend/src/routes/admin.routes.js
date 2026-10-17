@@ -7,6 +7,7 @@ const { authenticate, authorize } = require('../middlewares/auth.middleware');
 router.get('/stats', authenticate, authorize(['admin', 'manager']), AdminController.getDashboardStats);
 router.get('/reports/revenue', authenticate, authorize(['admin', 'manager']), AdminController.getRevenueReport);
 router.get('/audit-logs', authenticate, authorize(['admin', 'manager']), AdminController.getAuditLogs);
+router.get('/cinemas-rooms', authenticate, authorize(['admin', 'manager']), AdminController.getCinemasAndRooms);
 
 // User & Role Management (Admin only)
 router.get('/users', authenticate, authorize(['admin']), AdminController.getUsers);

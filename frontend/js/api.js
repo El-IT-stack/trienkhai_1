@@ -155,11 +155,27 @@ function updateNavbarAuth() {
       : '<span class="badge bg-secondary ms-1">Khách</span>';
 
     let extraRoleLinks = '';
-    if (['admin', 'manager'].includes(user.role_name)) {
-      extraRoleLinks += `<li><a class="dropdown-item py-2" href="/admin.html"><i class="bi bi-speedometer2 me-2 text-warning"></i>Bảng Quản Trị</a></li>`;
-    }
-    if (['admin', 'manager', 'staff'].includes(user.role_name)) {
-      extraRoleLinks += `<li><a class="dropdown-item py-2" href="/staff-checkin.html"><i class="bi bi-qr-code-scan me-2 text-info"></i>Soát Vé (Staff)</a></li>`;
+    if (user.role_name === 'admin') {
+      extraRoleLinks += `
+        <li><h6 class="dropdown-header text-warning small fw-bold"><i class="bi bi-shield-lock me-1"></i>QUYỀN QUẢN TRỊ</h6></li>
+        <li><a class="dropdown-item py-2" href="/admin.html"><i class="bi bi-speedometer2 me-2 text-warning"></i>Bảng Quản Trị Hệ Thống</a></li>
+        <li><a class="dropdown-item py-2" href="/manager.html"><i class="bi bi-briefcase me-2 text-warning"></i>Cổng Quản Lý Cụm Rạp</a></li>
+        <li><a class="dropdown-item py-2" href="/staff.html"><i class="bi bi-person-badge me-2 text-info"></i>Cổng Nhân Viên (POS & Soát Vé)</a></li>
+        <li><hr class="dropdown-divider border-secondary"></li>
+      `;
+    } else if (user.role_name === 'manager') {
+      extraRoleLinks += `
+        <li><h6 class="dropdown-header text-warning small fw-bold"><i class="bi bi-briefcase me-1"></i>QUYỀN ĐIỀU HÀNH</h6></li>
+        <li><a class="dropdown-item py-2" href="/manager.html"><i class="bi bi-briefcase me-2 text-warning"></i>Cổng Quản Lý Cụm Rạp</a></li>
+        <li><a class="dropdown-item py-2" href="/staff.html"><i class="bi bi-person-badge me-2 text-info"></i>Cổng Nhân Viên (POS & Soát Vé)</a></li>
+        <li><hr class="dropdown-divider border-secondary"></li>
+      `;
+    } else if (user.role_name === 'staff') {
+      extraRoleLinks += `
+        <li><h6 class="dropdown-header text-info small fw-bold"><i class="bi bi-person-badge me-1"></i>QUYỀN NHÂN VIÊN</h6></li>
+        <li><a class="dropdown-item py-2" href="/staff.html"><i class="bi bi-person-badge me-2 text-info"></i>Cổng Nhân Viên (POS & Soát Vé)</a></li>
+        <li><hr class="dropdown-divider border-secondary"></li>
+      `;
     }
 
     authNav.innerHTML = `
@@ -169,10 +185,10 @@ function updateNavbarAuth() {
           <span>${user.full_name}</span>
           ${roleBadge}
         </button>
-        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" style="background:#1e293b; border: 1px solid rgba(255,255,255,0.1);">
+        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" style="background:#1e293b; border: 1px solid rgba(255,255,255,0.1); min-width: 250px;">
           <li><h6 class="dropdown-header text-muted">Tài khoản: ${user.email}</h6></li>
-          <li><a class="dropdown-item py-2" href="/my-tickets.html"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Vé Của Tôi</a></li>
           ${extraRoleLinks}
+          <li><a class="dropdown-item py-2" href="/my-tickets.html"><i class="bi bi-ticket-perforated me-2 text-primary"></i>Vé Của Tôi</a></li>
           <li><hr class="dropdown-divider border-secondary"></li>
           <li><button class="dropdown-item py-2 text-danger" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất</button></li>
         </ul>
@@ -188,6 +204,9 @@ function updateNavbarAuth() {
       </button>
     `;
   }
+
+  // Update role switcher bar active state
+  updateRoleSwitcherBarState();
 }
 
 function handleLogout() {
@@ -196,7 +215,57 @@ function handleLogout() {
   updateNavbarAuth();
   setTimeout(() => {
     window.location.href = '/index.html';
-  }, 500);
+  }, 400);
+}
+
+// 1-Click Role Switcher for seamless testing & grading
+async function quickSwitchRole(role) {
+  let email = '';
+  let password = '';
+  let redirectUrl = '/index.html';
+
+  if (role === 'admin') {
+    email = 'admin@cineevent.vn';
+    password = 'AdminPassword123!';
+    redirectUrl = '/admin.html';
+  } else if (role === 'manager') {
+    email = 'manager@cineevent.vn';
+    password = 'ManagerPassword123!';
+    redirectUrl = '/manager.html';
+  } else if (role === 'staff') {
+    email = 'staff@cineevent.vn';
+    password = 'StaffPassword123!';
+    redirectUrl = '/staff.html';
+  } else if (role === 'customer') {
+    email = 'customer@gmail.com';
+    password = 'CustomerPassword123!';
+    redirectUrl = '/my-tickets.html';
+  }
+
+  try {
+    showToast(`Đang chuyển sang vai trò [${role.toUpperCase()}]...`, 'info');
+    const res = await apiCall('/auth/login', {
+      method: 'POST',
+      body: { email, password }
+    });
+
+    setToken(res.data.token);
+    setCurrentUser(res.data.user);
+    showToast(`Đã chuyển sang vai trò: ${res.data.user.full_name} (${res.data.user.role_name})`, 'success');
+
+    // Close any open login modal
+    const modalEl = document.getElementById('loginModal');
+    if (modalEl) {
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 400);
+  } catch (err) {
+    showToast(`Lỗi chuyển vai trò: ${err.message}`, 'danger');
+  }
 }
 
 // Quick autofill credentials for testing
@@ -386,10 +455,61 @@ async function handleRegisterForm(e) {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Tạo Tài Khoản';
   }
+// Render Top Role Demo Switcher Bar on every page
+function renderRoleSwitcherBar() {
+  if (document.getElementById('roleSwitcherBar')) return;
+
+  const barHtml = `
+    <div id="roleSwitcherBar" class="py-1 px-3 border-bottom border-secondary d-flex align-items-center justify-content-between flex-wrap" style="background: #070a12; font-size: 0.8rem; z-index: 1060; position: relative;">
+      <div class="d-flex align-items-center gap-2 py-1">
+        <span class="badge bg-secondary text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;"><i class="bi bi-people-fill me-1"></i>Demo Phân Quyền (1-Click)</span>
+        <span class="text-muted d-none d-md-inline" style="font-size: 0.75rem;">Chuyển đổi giao diện chức năng theo 4 vai trò:</span>
+      </div>
+      <div class="d-flex align-items-center gap-1 flex-wrap py-1">
+        <button type="button" class="btn btn-xs py-0 px-2 btn-outline-danger" id="btnRoleAdmin" onclick="quickSwitchRole('admin')" title="Đăng nhập Admin (admin@cineevent.vn)">
+          <i class="bi bi-shield-lock-fill me-1"></i>Admin
+        </button>
+        <button type="button" class="btn btn-xs py-0 px-2 btn-outline-warning" id="btnRoleManager" onclick="quickSwitchRole('manager')" title="Đăng nhập Quản lý (manager@cineevent.vn)">
+          <i class="bi bi-briefcase-fill me-1"></i>Quản Lý
+        </button>
+        <button type="button" class="btn btn-xs py-0 px-2 btn-outline-info" id="btnRoleStaff" onclick="quickSwitchRole('staff')" title="Đăng nhập Nhân viên (staff@cineevent.vn)">
+          <i class="bi bi-person-badge-fill me-1"></i>Nhân Viên
+        </button>
+        <button type="button" class="btn btn-xs py-0 px-2 btn-outline-light" id="btnRoleCustomer" onclick="quickSwitchRole('customer')" title="Đăng nhập Khách hàng (customer@gmail.com)">
+          <i class="bi bi-person-heart me-1"></i>Khách Hàng
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('afterbegin', barHtml);
+}
+
+function updateRoleSwitcherBarState() {
+  const user = getCurrentUser();
+  const currentRole = user ? user.role_name : null;
+
+  ['admin', 'manager', 'staff', 'customer'].forEach(r => {
+    const btn = document.getElementById(`btnRole${r.charAt(0).toUpperCase() + r.slice(1)}`);
+    if (!btn) return;
+    if (currentRole === r) {
+      btn.classList.add('active', 'fw-bold', 'shadow-sm');
+      if (r === 'admin') btn.className = 'btn btn-xs py-0 px-2 btn-danger active fw-bold';
+      else if (r === 'manager') btn.className = 'btn btn-xs py-0 px-2 btn-warning active fw-bold text-dark';
+      else if (r === 'staff') btn.className = 'btn btn-xs py-0 px-2 btn-info active fw-bold text-dark';
+      else if (r === 'customer') btn.className = 'btn btn-xs py-0 px-2 btn-light active fw-bold';
+    } else {
+      if (r === 'admin') btn.className = 'btn btn-xs py-0 px-2 btn-outline-danger';
+      else if (r === 'manager') btn.className = 'btn btn-xs py-0 px-2 btn-outline-warning';
+      else if (r === 'staff') btn.className = 'btn btn-xs py-0 px-2 btn-outline-info';
+      else if (r === 'customer') btn.className = 'btn btn-xs py-0 px-2 btn-outline-light';
+    }
+  });
 }
 
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
+  renderRoleSwitcherBar();
   renderAuthModals();
   updateNavbarAuth();
 });

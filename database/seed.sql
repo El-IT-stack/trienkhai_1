@@ -67,14 +67,30 @@ INSERT INTO movies (id, title, slug, genre_id, duration, release_date, end_date,
 (4, 'Godzilla x Kong: Đế Chế Mới', 'godzilla-x-kong-de-che-moi', 1, 115, '2026-03-29', '2026-12-31', 'Adam Wingard', 'Rebecca Hall, Brian Tyree Henry, Dan Stevens', 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1200&auto=format&fit=crop&q=80', 'https://www.youtube.com', 'Godzilla và Kong phải gạt bỏ hiềm khích để cùng chiến đấu chống lại một mối đe dọa khổng lồ chưa từng thấy ẩn sâu trong Trái Đất Rỗng.', 'T13', 'now_showing'),
 (5, 'Lật Mặt 7: Một Điều Ước', 'lat-mat-7-mot-dieu-uoc', 3, 138, '2026-04-26', '2026-12-31', 'Lý Hải', 'Thanh Hiền, Trương Minh Cường, Đinh Y Nhung', 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&auto=format&fit=crop&q=80', 'https://www.youtube.com', 'Câu chuyện cảm động về người mẹ 73 tuổi một mình nuôi 5 đứa con khôn lớn. Khi bà gặp nạn, các con trưởng thành phải xoay xở nghĩa vụ phụng dưỡng.', 'K', 'coming_soon'),
 (6, 'Deadpool & Wolverine', 'deadpool-and-wolverine', 1, 127, '2026-07-26', '2026-12-31', 'Shawn Levy', 'Ryan Reynolds, Hugh Jackman, Emma Corrin', 'https://images.unsplash.com/photo-1568876694728-451bbf694b83?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&auto=format&fit=crop&q=80', 'https://www.youtube.com', 'Wade Wilson bị cơ quan TVA lôi kéo vào nhiệm vụ giải cứu đa vũ trụ và bắt tay cùng người sói Wolverine cộc cằn.', 'T18', 'coming_soon')
-ON DUPLICATE KEY UPDATE title=VALUES(title);
+ON DUPLICATE KEY UPDATE 
+  title=VALUES(title), 
+  slug=VALUES(slug), 
+  genre_id=VALUES(genre_id), 
+  duration=VALUES(duration), 
+  director=VALUES(director), 
+  cast=VALUES(cast), 
+  description=VALUES(description), 
+  poster_url=VALUES(poster_url), 
+  banner_url=VALUES(banner_url);
 
 -- 7. Insert Events
 INSERT INTO events (id, title, slug, category, organizer, start_time, end_time, banner_url, description, venue_name, venue_address, status) VALUES
 (1, 'Đại Nhạc Hội Monsoon Music Festival 2026', 'monsoon-music-festival-2026', 'Đại Nhạc Hội EDM & Rock', 'Monsoon Production & CineEvent', '2026-11-20 18:00:00', '2026-11-20 23:30:00', 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&auto=format&fit=crop&q=80', 'Lễ hội âm nhạc quốc tế đỉnh cao quy tụ dàn nghệ sĩ hàng đầu Việt Nam và Quốc Tế cùng hệ thống âm thanh ánh sáng chuẩn festival toàn cầu.', 'Trung Tâm Hội Nghị Quốc Gia', 'Đại lộ Thăng Long, Mễ Trì, Nam Từ Liêm, Hà Nội', 'upcoming'),
 (2, 'Hòa Nhạc Giao Hưởng Live in Saigon', 'hoa-nhac-giao-huong-saigon', 'Nhạc Cổ Điển & Symphony', 'Dàn Nhạc Giao Hưởng Quốc Gia', '2026-11-25 19:30:00', '2026-11-25 22:00:00', 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1200&auto=format&fit=crop&q=80', 'Thưởng thức những tác phẩm kinh điển của Beethoven, Mozart và Tchaikovsky qua màn biểu diễn xuất chúng của 80 nghệ sĩ giao hưởng tài hoa.', 'Nhà Hát Hòa Bình', '240 đường 3 Tháng 2, Phường 12, Quận 10, TP.HCM', 'upcoming'),
 (3, 'Vietnam GameVerse Esports Championship 2026', 'gameverse-esports-championship', 'Thể Thao Điện Tử & Triển Lãm', 'Hiệp Hội Thể Thao Điện Tử & Giải Trí', '2026-12-05 09:00:00', '2026-12-05 21:00:00', 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80', 'Ngày hội game lớn nhất Việt Nam với chung kết tổng giải đấu LMHT, Tốc Chiến, cosplay contest và khu trải nghiệm công nghệ thực tế ảo VR đỉnh cao.', 'Sân Vận Động Quân Khu 7', '202 Hoàng Văn Thụ, Phường 9, Phú Nhuận, TP.HCM', 'upcoming')
-ON DUPLICATE KEY UPDATE title=VALUES(title);
+ON DUPLICATE KEY UPDATE 
+  title=VALUES(title), 
+  slug=VALUES(slug), 
+  category=VALUES(category), 
+  organizer=VALUES(organizer), 
+  description=VALUES(description), 
+  venue_name=VALUES(venue_name), 
+  venue_address=VALUES(venue_address);
 
 -- 8. Insert Ticket Types for Events
 INSERT INTO ticket_types (id, event_id, name, price, total_quantity, sold_quantity, description) VALUES
