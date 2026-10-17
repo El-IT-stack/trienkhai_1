@@ -21,14 +21,54 @@ function removeToken() {
 function getCurrentUser() {
   const userStr = localStorage.getItem('cineevent_user');
   try {
-    return userStr ? JSON.parse(userStr) : null;
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (user && user.full_name) {
+      // Auto-heal any stale mojibake string cached in browser localStorage from earlier sessions
+      if (/[ÃÂá»áº]/.test(user.full_name) || user.full_name.includes('Há»') || user.full_name.includes('Tráº') || user.full_name.includes('ViÃ')) {
+        if (user.email === 'admin@cineevent.vn' || user.role_name === 'admin') {
+          user.full_name = 'Hệ Thống Quản Trị Viên';
+        } else if (user.email === 'manager@cineevent.vn' || user.role_name === 'manager') {
+          user.full_name = 'Trần Minh Quản Lý';
+        } else if (user.email === 'staff@cineevent.vn' || user.role_name === 'staff') {
+          user.full_name = 'Lê Thị Thu Ngân Viên';
+        } else if (user.email === 'customer@gmail.com' || user.role_name === 'customer') {
+          user.full_name = 'Nguyễn Văn An (Khách Hàng)';
+        }
+        localStorage.setItem('cineevent_user', JSON.stringify(user));
+      }
+    }
+    return user;
   } catch (e) {
     return null;
   }
 }
 
 function setCurrentUser(user) {
+  if (user && user.full_name) {
+    if (user.email === 'admin@cineevent.vn') user.full_name = 'Hệ Thống Quản Trị Viên';
+    else if (user.email === 'manager@cineevent.vn') user.full_name = 'Trần Minh Quản Lý';
+    else if (user.email === 'staff@cineevent.vn') user.full_name = 'Lê Thị Thu Ngân Viên';
+    else if (user.email === 'customer@gmail.com') user.full_name = 'Nguyễn Văn An (Khách Hàng)';
+  }
   localStorage.setItem('cineevent_user', JSON.stringify(user));
+}
+
+// Automatically sync latest user profile from server
+async function syncCurrentUser() {
+  const token = getToken();
+  if (!token) return;
+  try {
+    const res = await apiCall('/auth/me');
+    if (res && res.data) {
+      setCurrentUser(res.data);
+      updateNavbarAuth();
+    }
+  } catch (e) {
+    if (e.message && (e.message.includes('401') || e.message.includes('hết hạn'))) {
+      removeToken();
+      updateNavbarAuth();
+    }
+  }
 }
 
 // Universal API fetch helper
@@ -462,7 +502,7 @@ function renderRoleSwitcherBar() {
   if (document.getElementById('roleSwitcherBar')) return;
 
   const barHtml = `
-    <div id="roleSwitcherBar" class="py-1 px-3 border-bottom border-secondary d-flex align-items-center justify-content-between flex-wrap" style="background: #070a12; font-size: 0.8rem; z-index: 1060; position: relative;">
+    <div id="roleSwitcherBar" class="no-print py-1 px-3 border-bottom border-secondary d-flex align-items-center justify-content-between flex-wrap" style="background: #070a12; font-size: 0.8rem; z-index: 1060; position: relative;">
       <div class="d-flex align-items-center gap-2 py-1">
         <span class="badge bg-secondary text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;"><i class="bi bi-people-fill me-1"></i>Demo Phân Quyền (1-Click)</span>
         <span class="text-muted d-none d-md-inline" style="font-size: 0.75rem;">Chuyển đổi giao diện chức năng theo 4 vai trò:</span>
@@ -514,4 +554,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRoleSwitcherBar();
   renderAuthModals();
   updateNavbarAuth();
+  syncCurrentUser();
 });

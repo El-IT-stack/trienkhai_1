@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -103,9 +103,9 @@
             : '<span class="badge bg-danger">Đã Hủy</span>';
 
           const actionBtn = b.status === 'confirmed'
-            ? `<a href="/ticket-result.html?code=${b.booking_code}" class="btn btn-outline-cine btn-sm"><i class="bi bi-qr-code me-1"></i>Xem Vé Điện Tử</a>`
+            ? `<a href="/ticket-result.html?code=${b.booking_code}" class="btn btn-primary-cine btn-sm"><i class="bi bi-printer me-1"></i>Xem & In Vé</a>`
             : b.status === 'pending'
-            ? `<a href="/payment.html?code=${b.booking_code}" class="btn btn-primary-cine btn-sm"><i class="bi bi-credit-card me-1"></i>Thanh Toán Ngay</a>`
+            ? `<a href="/payment.html?code=${b.booking_code}" class="btn btn-outline-cine btn-sm"><i class="bi bi-credit-card me-1"></i>Thanh Toán Ngay</a>`
             : '';
 
           return `

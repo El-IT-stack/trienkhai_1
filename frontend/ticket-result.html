@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -9,18 +9,89 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css?v=2">
   <style>
+    /* Print Optimization for Cinema Boarding Pass */
     @media print {
-      body { background: #fff !important; color: #000 !important; }
-      .navbar, footer, .no-print { display: none !important; }
-      .ticket-wrapper { border: 2px solid #000 !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
-      .text-white, .text-warning, .text-muted { color: #000 !important; }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: system-ui, -apple-system, sans-serif !important;
+      }
+      #roleSwitcherBar, .navbar, footer, .no-print, button, .btn {
+        display: none !important;
+      }
+      main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #ticketResultContainer {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      .ticket-wrapper {
+        border: 2px solid #000000 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        margin-bottom: 25px !important;
+        padding: 20px !important;
+        border-radius: 8px !important;
+      }
+      .ticket-notch-left, .ticket-notch-right {
+        display: none !important;
+      }
+      .ticket-divider {
+        border-top: 2px dashed #000000 !important;
+        margin: 15px 0 !important;
+      }
+      .text-white, .text-warning, .text-muted, .text-info, .text-danger, .text-light, .text-success {
+        color: #000000 !important;
+      }
+      .bg-dark, .bg-secondary, .bg-white {
+        background: transparent !important;
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+      }
+      .badge {
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+        background: transparent !important;
+      }
+      .brand-badge {
+        -webkit-text-fill-color: #000000 !important;
+        color: #000000 !important;
+      }
+      img {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    /* Floating Print Button for Instant Access */
+    .floating-print-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 1045;
+    }
+    .btn-floating-print {
+      box-shadow: 0 10px 25px rgba(225, 29, 72, 0.5) !important;
+      border: 2px solid rgba(255, 255, 255, 0.3) !important;
+      transition: all 0.25s ease;
+    }
+    .btn-floating-print:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(225, 29, 72, 0.7) !important;
     }
   </style>
 </head>
 <body>
 
   <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top no-print">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
         <i class="bi bi-film text-danger fs-3"></i>
@@ -44,8 +115,8 @@
   </nav>
 
   <!-- Main Container -->
-  <main class="container my-5">
-    <div id="ticketResultContainer" style="max-width: 650px; margin: 0 auto;">
+  <main class="container my-4">
+    <div id="ticketResultContainer" style="max-width: 680px; margin: 0 auto;">
       <div class="text-center py-5">
         <div class="spinner-border text-danger" role="status"></div>
         <div class="text-muted mt-2">Đang nạp thông tin vé điện tử...</div>
@@ -53,7 +124,15 @@
     </div>
   </main>
 
-  <footer class="mt-auto py-4 border-top border-secondary" style="background: #070a10;">
+  <!-- Floating Print Button (Always Available) -->
+  <div class="floating-print-container no-print">
+    <button type="button" class="btn btn-danger btn-lg rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2 btn-floating-print" onclick="window.print()" title="Nhấp để In vé hoặc Lưu PDF (Ctrl + P)">
+      <i class="bi bi-printer-fill fs-5"></i>
+      <span>IN VÉ (PRINT)</span>
+    </button>
+  </div>
+
+  <footer class="mt-auto py-4 border-top border-secondary no-print" style="background: #070a10;">
     <div class="container text-center text-muted small">
       CineEvent — Hệ Thống Đặt Vé Xem Phim & Sự Kiện | Sinh viên: [HỌ VÀ TÊN] - MSSV: [MSSV] - Lớp: [LỚP]
     </div>
@@ -68,9 +147,10 @@
 
       if (!bookingCode) {
         document.getElementById('ticketResultContainer').innerHTML = `
-          <div class="alert alert-warning glass-card text-center">
-            <h5>Không tìm thấy thông tin vé!</h5>
-            <a href="/index.html" class="btn btn-primary-cine btn-sm mt-3">Về Trang Chủ</a>
+          <div class="alert alert-warning glass-card text-center p-4">
+            <h5 class="fw-bold mb-2">Không tìm thấy thông tin đơn đặt vé!</h5>
+            <p class="text-muted mb-3">Vui lòng kiểm tra lại mã đơn đặt vé hoặc quay về trang chủ.</p>
+            <a href="/index.html" class="btn btn-primary-cine btn-sm">Về Trang Chủ</a>
           </div>
         `;
         return;
@@ -86,12 +166,17 @@
         let ticketsListHtml = '';
         if (tickets.length > 0) {
           ticketsListHtml = tickets.map((tck, idx) => {
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(tck.qr_data)}&bgcolor=1e293b&color=ffffff`;
+            // Clean black-on-white QR code for perfect printability & camera scanning
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(tck.qr_data)}&margin=4`;
             const statusBadge = tck.status === 'valid'
               ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Hợp Lệ (Chưa Soát)</span>'
               : tck.status === 'used'
               ? '<span class="badge bg-secondary"><i class="bi bi-check-all me-1"></i>Đã Sử Dụng</span>'
               : '<span class="badge bg-danger">Đã Hủy</span>';
+
+            const seatOrType = tck.seat_row 
+              ? `Ghế <strong class="text-warning">${tck.seat_row}${tck.seat_number}</strong> (${tck.seat_type ? tck.seat_type.toUpperCase() : 'STANDARD'})` 
+              : `Vé: <strong class="text-warning">${tck.ticket_type_name || 'Tiêu chuẩn'}</strong>`;
 
             return `
               <div class="ticket-wrapper p-4 mb-4">
@@ -103,71 +188,89 @@
                     <i class="bi bi-film text-danger fs-4"></i>
                     <span class="fw-bold text-white fs-5">Cine<span class="brand-badge">Event</span> E-Ticket</span>
                   </div>
-                  <div>${statusBadge}</div>
+                  <div class="d-flex align-items-center gap-2">
+                    ${statusBadge}
+                    <button type="button" class="btn btn-outline-light btn-xs btn-sm py-1 no-print" onclick="window.print()" title="In riêng vé này">
+                      <i class="bi bi-printer me-1"></i> In Vé
+                    </button>
+                  </div>
                 </div>
 
                 <div class="row align-items-center g-3">
                   <div class="col-sm-8">
                     <h5 class="fw-bold text-white mb-2">${title}</h5>
                     <div class="small text-muted mb-1"><i class="bi bi-geo-alt text-danger me-1"></i>${booking.cinema_name || ''} &bull; ${booking.room_name || ''}</div>
-                    <div class="small text-muted mb-1"><i class="bi bi-calendar-event text-warning me-1"></i>${formatDateTime(booking.showtime_start || booking.created_at)}</div>
+                    <div class="small text-muted mb-1"><i class="bi bi-calendar-event text-warning me-1"></i>Thời gian: <strong>${formatDateTime(booking.showtime_start || booking.created_at)}</strong></div>
+                    <div class="small text-muted mb-1"><i class="bi bi-ticket-detailed text-info me-1"></i>Vị trí: ${seatOrType}</div>
                     <div class="small text-muted mb-3"><i class="bi bi-person text-info me-1"></i>Khách hàng: <strong>${booking.user_name}</strong></div>
 
                     <div class="p-2 rounded bg-dark border border-secondary font-monospace small">
                       <div class="text-muted" style="font-size:0.75rem;">MÃ VÉ (TICKET CODE):</div>
-                      <div class="text-warning fw-bold fs-6">${tck.ticket_code}</div>
+                      <div class="text-warning fw-bold fs-5">${tck.ticket_code}</div>
                     </div>
                   </div>
 
                   <div class="col-sm-4 text-center">
-                    <div class="p-2 bg-dark rounded border border-secondary d-inline-block">
-                      <img src="${qrImageUrl}" alt="QR Ticket Code" style="width: 120px; height: 120px; border-radius: 6px;">
+                    <div class="p-2 bg-white rounded border border-light d-inline-block shadow-sm">
+                      <img src="${qrImageUrl}" alt="QR Ticket Code" style="width: 130px; height: 130px; border-radius: 4px; display: block;">
                     </div>
-                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">Quét mã khi vào cửa</div>
+                    <div class="text-muted small mt-1 font-monospace" style="font-size: 0.72rem;">Quét mã tại cổng rạp</div>
                   </div>
                 </div>
 
                 <div class="ticket-divider"></div>
 
                 <div class="d-flex justify-content-between align-items-center small text-muted">
-                  <span>Mã đơn: <strong class="text-white">${booking.booking_code}</strong></span>
+                  <span>Mã đơn hàng: <strong class="text-white">${booking.booking_code}</strong></span>
                   <span>Mã GD: <strong class="text-white">${booking.transaction_code || 'DEMO-TXN'}</strong></span>
                 </div>
               </div>
             `;
           }).join('');
         } else {
-          ticketsListHtml = '<div class="alert alert-info">Đơn hàng chưa có vé điện tử được phát hành.</div>';
+          ticketsListHtml = '<div class="alert alert-info glass-card text-center">Đơn hàng chưa có vé điện tử được phát hành.</div>';
         }
 
         document.getElementById('ticketResultContainer').innerHTML = `
           <!-- Success banner -->
-          <div class="text-center mb-4 no-print">
-            <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-25 text-success mb-3">
+          <div class="text-center mb-3 no-print">
+            <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-25 text-success mb-2">
               <i class="bi bi-check-circle-fill fs-1"></i>
             </div>
             <h2 class="fw-bold text-white mb-1">Giao Dịch Thành Công!</h2>
-            <p class="text-muted small">Cảm ơn bạn đã lựa chọn CineEvent. Vé điện tử hợp lệ đã được cấp bên dưới.</p>
+            <p class="text-muted small mb-3">Cảm ơn bạn đã lựa chọn CineEvent. Vé điện tử hợp lệ đã được cấp bên dưới.</p>
+
+            <!-- Prominent Print Button at Top -->
+            <div class="d-flex justify-content-center gap-2 flex-wrap mb-4">
+              <button type="button" class="btn btn-primary-cine btn-lg px-4 py-2 fw-bold shadow-lg d-flex align-items-center gap-2" onclick="window.print()">
+                <i class="bi bi-printer-fill fs-4"></i>
+                <span>IN VÉ ĐIỆN TỬ NGAY (PRINT TICKET)</span>
+              </button>
+              <a href="/my-tickets.html" class="btn btn-outline-cine btn-lg px-4 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-ticket-perforated fs-5"></i>
+                <span>Xem Tất Cả Vé Của Tôi</span>
+              </a>
+            </div>
           </div>
 
-          <!-- Tickets -->
+          <!-- Printable Ticket Cards -->
           ${ticketsListHtml}
 
-          <!-- Actions -->
-          <div class="d-flex justify-content-center gap-3 mt-4 no-print">
-            <button class="btn btn-outline-cine" onclick="window.print()">
-              <i class="bi bi-printer me-2"></i>In Vé Điện Tử
+          <!-- Bottom Actions -->
+          <div class="d-flex justify-content-center gap-3 mt-4 mb-5 no-print">
+            <button type="button" class="btn btn-primary-cine px-4 py-2 fw-bold" onclick="window.print()">
+              <i class="bi bi-printer me-2"></i>In Vé Điện Tử (Ctrl + P)
             </button>
-            <a href="/my-tickets.html" class="btn btn-primary-cine">
-              <i class="bi bi-ticket-perforated me-2"></i>Xem Tất Cả Vé Của Tôi
+            <a href="/movies.html" class="btn btn-outline-cine px-4 py-2">
+              <i class="bi bi-film me-2"></i>Đặt Thêm Vé Khác
             </a>
           </div>
         `;
       } catch (err) {
         document.getElementById('ticketResultContainer').innerHTML = `
-          <div class="alert alert-danger glass-card">
-            <h5>Không thể nạp vé:</h5>
-            <p>${err.message}</p>
+          <div class="alert alert-danger glass-card p-4 text-center">
+            <h5 class="fw-bold mb-2">Không thể nạp vé:</h5>
+            <p class="mb-3">${err.message}</p>
             <a href="/index.html" class="btn btn-outline-cine btn-sm">Về Trang Chủ</a>
           </div>
         `;
