@@ -142,7 +142,7 @@ docker compose logs -f
 | STT | Dịch vụ | URL Truy Cập | Mục đích sử dụng |
 | :---: | :--- | :--- | :--- |
 | **1** | **Website CineEvent (Nginx)** | [http://localhost](http://localhost) hoặc [https://localhost](https://localhost) | Cổng giao diện chính đặt vé và quản trị |
-| **2** | **phpMyAdmin** | [http://127.0.0.1:8085](http://127.0.0.1:8085) | Quản trị CSDL MySQL (User: `cineevent_user` / Pass: `CineEvent_UserSecurePass_2026!`) |
+| **2** | **phpMyAdmin** | [http://127.0.0.1:8085](http://127.0.0.1:8085) | Quản trị CSDL MySQL (User: `cineevent_user` / Pass: `CineEvent_UserSecurePass_2026!` hoặc Root: `root` / Pass: `Root_SecurePassword_2026!`) |
 | **3** | **Prometheus Dashboard** | [http://localhost:9090](http://localhost:9090) | Kiểm tra Scrape Targets và truy vấn PromQL |
 | **4** | **Grafana Monitoring** | [http://localhost:3000](http://localhost:3000) | Dashboard giám sát (User: `admin` / Pass: `Grafana_AdminSecurePass_2026!`) |
 | **5** | **cAdvisor Container Monitor** | [http://localhost:8081](http://localhost:8081) | Giám sát tài nguyên phần cứng của từng Container |
